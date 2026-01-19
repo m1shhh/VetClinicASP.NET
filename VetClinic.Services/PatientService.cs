@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore; // За .Include()
-using VetClinic.Models; // Тук са DB класовете
+﻿using Microsoft.EntityFrameworkCore; // Важно за .Include()
+using VetClinic.Models;
 using VetClinic.Models.ViewModels;
 using VetClinicASP.NET.Models;
 
@@ -9,38 +9,92 @@ namespace VetClinic.Services
     {
         private readonly VetClinicContext _context;
 
-        // Конструктор - тук "инжектираме" базата данни
         public PatientService(VetClinicContext context)
         {
             _context = context;
         }
 
+        // 1. Взимане на всички пациенти за таблицата
         public List<PatientViewModel> GetAllPatients()
         {
-            var patients = _context.Patients
+            return _context.Patients
                 .Include(p => p.Owner)
                 .Select(p => new PatientViewModel
                 {
-                    // ПОПРАВКА 1: Виж в Patient.cs как е ID-то.
-                    // Ако е PatientId, напиши p.PatientId
-                    Id = p.PatientId, // <-- Смени "PatientID" с точното име от файла!
-
-                    // ПОПРАВКА 2: Име на животното
+                    // ВНИМАНИЕ: Тук използваме PatientID, както се разбрахме
+                    Id = p.PatientId,
                     Name = p.Name,
-
-                    // ПОПРАВКА 3: Оправяне на int? към int
-                    // "?? 0" означава: ако в базата е NULL, използвай 0.
+                    Species = p.Species,
+                    Breed = p.Breed,
+                    // Оправяме проблема с Nullable int (int?)
                     Age = p.Age ?? 0,
-
-                    // ПОПРАВКА 4: Име на собственика
-                    // Ако в Owner.cs нямаш "Name", а имаш FirstName и LastName, събери ги:
-                    OwnerName = p.Owner != null
-                        ? (p.Owner.FullName)
-                        : "Няма собственик"
+                    // Използваме FullName, както потвърди, че се казва колоната
+                    OwnerName = p.Owner != null ? p.Owner.FullName : "Няма собственик"
                 })
                 .ToList();
+        }
 
-            return patients;
+        // 2. Добавяне на нов пациент
+        public void AddPatient(PatientInputModel model)
+        {
+            var patient = new Patient
+            {
+                Name = model.Name,
+                Species = model.Species,
+                Breed = model.Breed,
+                Age = model.Age,
+                // Тук свързваме външния ключ към собственика
+                OwnerId = model.OwnerId
+            };
+
+            _context.Patients.Add(patient);
+            _context.SaveChanges();
+        }
+
+        // 3. Взимане на списък със собственици за падащото меню
+        public List<KeyValuePair<string, string>> GetOwnersList()
+        {
+            return _context.Owners
+                .Select(x => new KeyValuePair<string, string>(
+                    x.OwnerId.ToString(),
+                    x.FullName))
+                .ToList();
+        }
+
+        // 4. Взимане на детайли за "Досие"
+        public PatientDetailsViewModel GetPatientDetails(int id)
+        {
+            var patient = _context.Patients
+                .Include(p => p.Owner)
+                .Include(p => p.Appointments) // 1. Взимаме прегледите
+                    .ThenInclude(a => a.Vet) // 2. За всеки преглед взимаме лекаря
+                .Where(p => p.PatientId == id)
+                .Select(p => new PatientDetailsViewModel
+                {
+                    Id = p.PatientId,
+                    Name = p.Name,
+                    Species = p.Species,
+                    Breed = p.Breed,
+                    Age = p.Age ?? 0,
+
+                    OwnerName = p.Owner.FullName,
+                    OwnerPhone = p.Owner.PhoneNumber,
+                    OwnerAddress = p.Owner.Address,
+
+                    // 3. Пълним списъка с прегледи
+                    Visits = p.Appointments.Select(a => new VisitViewModel
+                    {
+                        Date = a.DateTime, // Предполагам колоната е DateTime
+                        Reason = a.Reason, // Или Diagnosis, зависи от базата ти
+                                           // Проверка дали има назначен лекар, за да не гърми
+                        DoctorName = a.Vet != null ? a.Vet.FullName : "Неизвестен"
+                    })
+                    .OrderByDescending(v => v.Date) // Най-новите най-отгоре
+                    .ToList()
+                })
+                .FirstOrDefault();
+
+            return patient;
         }
     }
 }

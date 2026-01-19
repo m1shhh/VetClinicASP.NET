@@ -1,0 +1,98 @@
+﻿@model VetClinic.Models.ViewModels.PatientDetailsViewModel
+
+@{
+    ViewData["Title"] = "Досие на " + Model.Name;
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">🩺 Досие: <span class="text-primary fw-bold">@Model.Name</span></h1>
+            <h4 class="text-muted">@Model.Species / @Model.Breed / @Model.Age г.</h4>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">⬅ Назад към списъка</a>
+            <button class="btn btn-warning">✏ Редакция</button>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">📋 Основна информация</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">💉 История на прегледи</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#vaccines" type="button" role="tab">🛡 Ваксинации</button>
+        </li>
+    </ul>
+
+    <div class="tab-content p-4 border border-top-0 bg-white shadow-sm" id="myTabContent">
+
+        <div class="tab-pane fade show active" id="info" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Данни за собственика</h5>
+                    <hr />
+                    <p><strong>Име:</strong> @Model.OwnerName</p>
+                    <p><strong>Телефон:</strong> @(Model.OwnerPhone ?? "Няма данни")</p>
+                    <p><strong>Адрес:</strong> @(Model.OwnerAddress ?? "Няма данни")</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="history" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h5>Хронология на прегледите</h5>
+                <button class="btn btn-sm btn-primary">+ Нов преглед</button>
+            </div>
+
+            @if (Model.Visits != null && Model.Visits.Any())
+            {
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Причина / Диагноза</th>
+                            <th>Лекар</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var visit in Model.Visits)
+                        {
+                            <tr>
+                                <td>@visit.Date.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@visit.Reason</td>
+                                <td>👨‍⚕️ @visit.DoctorName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-light border">
+                    <i class="fa fa-info-circle"></i> Няма записани прегледи за този пациент до момента.
+                </div>
+            }
+        </div>
+
+        <div class="tab-pane fade" id="vaccines" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h5>Ваксинационен паспорт</h5>
+                <button class="btn btn-sm btn-success">+ Нова ваксина</button>
+            </div>
+            <p class="text-muted">Няма данни за ваксинации.</p>
+        </div>
+    </div>
+
+        <div class="tab-pane fade" id="vaccines" role="tabpanel">
+            <div class="d-flex justify-content-between mb-3">
+                <h5>Ваксинационен паспорт</h5>
+                <button class="btn btn-sm btn-success">+ Нова ваксина</button>
+            </div>
+            <p class="text-muted">Няма данни за ваксинации.</p>
+        </div>
+    </div>
+</div>

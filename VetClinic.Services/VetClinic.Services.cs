@@ -6,9 +6,10 @@ namespace VetClinic.Services
     {
         // Метод за взимане на всички пациенти за списъка
         List<PatientViewModel> GetAllPatients();
-
-        // Тук по-късно ще добавим методи като:
-        // void AddPatient(...);
-        // PatientDetailsViewModel GetById(int id);
+        PatientDetailsViewModel GetPatientDetails(int id);
+        // Добави тези два реда вътре в интерфейса
+        void AddPatient(PatientInputModel model);
+        List<KeyValuePair<string, string>> GetOwnersList(); // За падащото меню
+        
     }
 }
