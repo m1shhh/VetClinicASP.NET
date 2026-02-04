@@ -82,15 +82,20 @@ namespace VetClinic.Services
                     OwnerAddress = p.Owner.Address,
 
                     // 3. Пълним списъка с прегледи
+                    // ... вътре в Select ...
                     Visits = p.Appointments.Select(a => new VisitViewModel
                     {
-                        Date = a.DateTime, // Предполагам колоната е DateTime
-                        Reason = a.Reason, // Или Diagnosis, зависи от базата ти
-                                           // Проверка дали има назначен лекар, за да не гърми
+                        // 1. Събираме DateOnly и TimeOnly обратно в DateTime за изгледа
+                        Date = a.AppointmentDate.ToDateTime(a.AppointmentTime),
+
+                        Reason = a.Reason,
+
+                        // 2. Връзката се казва "Vet", а не "Veterinarian"
                         DoctorName = a.Vet != null ? a.Vet.FullName : "Неизвестен"
                     })
-                    .OrderByDescending(v => v.Date) // Най-новите най-отгоре
-                    .ToList()
+.OrderByDescending(v => v.Date)
+.ToList()
+                    // ...
                 })
                 .FirstOrDefault();
 

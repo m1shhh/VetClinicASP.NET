@@ -5,6 +5,8 @@ using VetClinic.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 // Добави това, за да се свържеш с SQL сървъра

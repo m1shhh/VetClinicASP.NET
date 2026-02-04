@@ -60,8 +60,19 @@
                                 <td>@patient.Age г.</td>
                                 <td>@patient.OwnerName</td>
                                 <td class="text-end">
-                                    <a asp-action="Details" asp-route-id="@patient.Id" class="btn btn-sm btn-primary">Досие</a>
-                                    <a href="#" class="btn btn-sm btn-warning">Редактирай</a>
+                                    <a asp-controller="Patients"
+                                       asp-action="Details"
+                                       asp-route-id="@patient.Id"
+                                       class="btn btn-sm btn-primary">
+                                        Досие
+                                    </a>
+
+                                    <a asp-controller="Patients"
+                                       asp-action="Edit"
+                                       asp-route-id="@patient.Id"
+                                       class="btn btn-sm btn-warning">
+                                        Редактирай
+                                    </a>
                                 </td>
                             </tr>
                         }
