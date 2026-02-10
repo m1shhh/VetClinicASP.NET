@@ -15,6 +15,15 @@
 
         // НОВО: Списък с история на прегледите
         public List<VisitViewModel> Visits { get; set; } = new List<VisitViewModel>();
+
+        // НОВО: Списък с ваксини
+        public List<VaccinationViewModel> Vaccinations { get; set; } = new List<VaccinationViewModel>();
+    }
+    public class VaccinationViewModel
+    {
+        public DateTime DateAdministered { get; set; } // Кога е сложена
+        public string VaccineName { get; set; } = null!;
+        public DateTime? NextDueDate { get; set; } // Кога е следващата (за напомняне)
     }
 
     // НОВО: Клас за един преглед
@@ -24,4 +33,5 @@
         public string Reason { get; set; } // Причина / Диагноза
         public string DoctorName { get; set; } // Кой го е прегледал
     }
+
 }

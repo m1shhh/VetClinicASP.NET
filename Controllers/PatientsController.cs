@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VetClinic.Services; // За да виждаме интерфейса
+using Microsoft.AspNetCore.Mvc.Rendering;
 using VetClinic.Models.ViewModels;
+using VetClinic.Services; // За да виждаме интерфейса
 using VetClinicASP.NET.Models;
 
 namespace VetClinic.Controllers
@@ -17,13 +18,17 @@ namespace VetClinic.Controllers
         }
 
         // GET: /Patients
-        public IActionResult Index()
+        // GET: Patients
+        public IActionResult Index(string searchString)
         {
-            // 1. Извикваме метода от услугата
-            var allPatients = _patientService.GetAllPatients();
+            ViewBag.CurrentFilter = searchString;
 
-            // 2. Подаваме данните към View-то
-            return View(allPatients);
+            // ГРЕШКАТА ОБИКНОВЕНО Е ТУК:
+            // Увери се, че в скобите подаваш (searchString)!
+            // Ако пише само GetAllPatients(), то винаги търси "нищо" и връща всички записи.
+            var patients = _patientService.GetAllPatients(searchString);
+
+            return View(patients);
         }
         // 1. GET: Отваря празната форма
         [HttpGet]
@@ -67,5 +72,47 @@ namespace VetClinic.Controllers
 
             return View(patient);
         }
+        // ---------------------------------------------------------
+        // НАЧАЛО НА EDIT МЕТОДИТЕ (Сложи ги в PatientsController.cs)
+        // ---------------------------------------------------------
+
+        // GET: Отваря формата за редакция
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            // Използваме новия метод от сървиса
+            var model = _patientService.GetPatientForEdit(id);
+
+            if (model == null)
+            {
+                return NotFound(); // Ако няма такъв пациент -> 404
+            }
+
+            // Зареждаме собствениците за падащото меню
+            var owners = _patientService.GetOwnersList();
+            ViewBag.Owners = new SelectList(owners, "Key", "Value", model.OwnerId);
+
+            return View(model);
+        }
+
+        // POST: Записва промените
+        [HttpPost]
+        public IActionResult Edit(PatientInputModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var owners = _patientService.GetOwnersList();
+                ViewBag.Owners = new SelectList(owners, "Key", "Value", model.OwnerId);
+                return View(model);
+            }
+
+            _patientService.UpdatePatient(model);
+
+            // ВАРИАНТ 1: Връща те в Досието на животното (препоръчително след редакция)
+            return RedirectToAction("Details", new { id = model.Id });
+        }
+        // ---------------------------------------------------------
+        // КРАЙ НА EDIT МЕТОДИТЕ
+        // ---------------------------------------------------------
     }
 }

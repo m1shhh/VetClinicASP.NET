@@ -11,8 +11,14 @@
             <h4 class="text-muted">@Model.Species / @Model.Breed / @Model.Age г.</h4>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Index" class="btn btn-outline-secondary">⬅ Назад към списъка</a>
-            <button class="btn btn-warning">✏ Редакция</button>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">⬅ Назад към списъка</a>
+
+            <a asp-controller="Patients"
+               asp-action="Edit"
+               asp-route-id="@Model.Id"
+               class="btn btn-warning">
+                ✏️ Редакция
+            </a>
         </div>
     </div>
 
@@ -81,20 +87,60 @@
         </div>
 
         <div class="tab-pane fade" id="vaccines" role="tabpanel">
-            <div class="d-flex justify-content-between mb-3">
+            <div class="d-flex justify-content-between mb-3 mt-3">
                 <h5>Ваксинационен паспорт</h5>
-                <button class="btn btn-sm btn-success">+ Нова ваксина</button>
+                <a asp-controller="Vaccinations"
+                   asp-action="Create"
+                   asp-route-patientId="@Model.Id"
+                   class="btn btn-sm btn-success">
+                    + Нова ваксина
+                </a>
             </div>
-            <p class="text-muted">Няма данни за ваксинации.</p>
-        </div>
-    </div>
 
-        <div class="tab-pane fade" id="vaccines" role="tabpanel">
-            <div class="d-flex justify-content-between mb-3">
-                <h5>Ваксинационен паспорт</h5>
-                <button class="btn btn-sm btn-success">+ Нова ваксина</button>
-            </div>
-            <p class="text-muted">Няма данни за ваксинации.</p>
+            @if (Model.Vaccinations != null && Model.Vaccinations.Any())
+            {
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ваксина / Препарат</th>
+                            <th>Дата на поставяне</th>
+                            <th>Следваща дата</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model.Vaccinations)
+                        {
+                            bool isOverdue = v.NextDueDate.HasValue && v.NextDueDate.Value < DateTime.Now;
+
+                            <tr class="@(isOverdue ? "table-danger" : "")">
+                                <td><strong>@v.VaccineName</strong></td>
+                                <td>@v.DateAdministered.ToString("dd.MM.yyyy")</td>
+                                <td>
+                                    @(v.NextDueDate.HasValue? v.NextDueDate.Value.ToString("dd.MM.yyyy") : "-")
+                                </td>
+                                <td>
+                                    @if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger">Изтекла!</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Активна</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-light border text-center p-4">
+                    <p class="text-muted mb-0">Няма данни за ваксинации за този пациент.</p>
+                    <small>Използвайте бутона горе вдясно, за да добавите първата ваксина.</small>
+                </div>
+            }
         </div>
     </div>
 </div>

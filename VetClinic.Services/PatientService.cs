@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore; // Важно за .Include()
+﻿using Microsoft.EntityFrameworkCore;
 using VetClinic.Models;
 using VetClinic.Models.ViewModels;
 using VetClinicASP.NET.Models;
@@ -14,27 +14,33 @@ namespace VetClinic.Services
             _context = context;
         }
 
-        // 1. Взимане на всички пациенти за таблицата
-        public List<PatientViewModel> GetAllPatients()
+        // 1. Списък с пациенти + Търсене
+        public List<PatientViewModel> GetAllPatients(string? searchTerm = null)
         {
-            return _context.Patients
+            var query = _context.Patients
                 .Include(p => p.Owner)
-                .Select(p => new PatientViewModel
-                {
-                    // ВНИМАНИЕ: Тук използваме PatientID, както се разбрахме
-                    Id = p.PatientId,
-                    Name = p.Name,
-                    Species = p.Species,
-                    Breed = p.Breed,
-                    // Оправяме проблема с Nullable int (int?)
-                    Age = p.Age ?? 0,
-                    // Използваме FullName, както потвърди, че се казва колоната
-                    OwnerName = p.Owner != null ? p.Owner.FullName : "Няма собственик"
-                })
-                .ToList();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(p =>
+                    p.Name.Contains(searchTerm) ||
+                    p.Owner.FullName.Contains(searchTerm)
+                );
+            }
+
+            return query.Select(p => new PatientViewModel
+            {
+                Id = p.PatientId,
+                Name = p.Name,
+                Species = p.Species,
+                Breed = p.Breed,
+                Age = p.Age ?? 0,
+                OwnerName = p.Owner != null ? p.Owner.FullName : "Няма собственик"
+            }).ToList();
         }
 
-        // 2. Добавяне на нов пациент
+        // 2. Добавяне
         public void AddPatient(PatientInputModel model)
         {
             var patient = new Patient
@@ -43,7 +49,6 @@ namespace VetClinic.Services
                 Species = model.Species,
                 Breed = model.Breed,
                 Age = model.Age,
-                // Тук свързваме външния ключ към собственика
                 OwnerId = model.OwnerId
             };
 
@@ -51,7 +56,7 @@ namespace VetClinic.Services
             _context.SaveChanges();
         }
 
-        // 3. Взимане на списък със собственици за падащото меню
+        // 3. Списък собственици
         public List<KeyValuePair<string, string>> GetOwnersList()
         {
             return _context.Owners
@@ -61,13 +66,13 @@ namespace VetClinic.Services
                 .ToList();
         }
 
-        // 4. Взимане на детайли за "Досие"
+        // 4. Детайли (Досие)
         public PatientDetailsViewModel GetPatientDetails(int id)
         {
             var patient = _context.Patients
                 .Include(p => p.Owner)
-                .Include(p => p.Appointments) // 1. Взимаме прегледите
-                    .ThenInclude(a => a.Vet) // 2. За всеки преглед взимаме лекаря
+                .Include(p => p.Appointments).ThenInclude(a => a.Vet)
+                .Include(p => p.Vaccinations)
                 .Where(p => p.PatientId == id)
                 .Select(p => new PatientDetailsViewModel
                 {
@@ -76,30 +81,57 @@ namespace VetClinic.Services
                     Species = p.Species,
                     Breed = p.Breed,
                     Age = p.Age ?? 0,
-
                     OwnerName = p.Owner.FullName,
                     OwnerPhone = p.Owner.PhoneNumber,
                     OwnerAddress = p.Owner.Address,
-
-                    // 3. Пълним списъка с прегледи
-                    // ... вътре в Select ...
                     Visits = p.Appointments.Select(a => new VisitViewModel
                     {
-                        // 1. Събираме DateOnly и TimeOnly обратно в DateTime за изгледа
                         Date = a.AppointmentDate.ToDateTime(a.AppointmentTime),
-
                         Reason = a.Reason,
-
-                        // 2. Връзката се казва "Vet", а не "Veterinarian"
                         DoctorName = a.Vet != null ? a.Vet.FullName : "Неизвестен"
-                    })
-.OrderByDescending(v => v.Date)
-.ToList()
-                    // ...
+                    }).OrderByDescending(v => v.Date).ToList(),
+                    Vaccinations = p.Vaccinations.Select(v => new VaccinationViewModel
+                    {
+                        VaccineName = v.VaccineName,
+                        DateAdministered = v.DateAdministered.ToDateTime(TimeOnly.MinValue),
+                        NextDueDate = v.NextDueDate.HasValue ? v.NextDueDate.Value.ToDateTime(TimeOnly.MinValue) : null
+                    }).OrderByDescending(v => v.DateAdministered).ToList()
                 })
                 .FirstOrDefault();
 
             return patient;
+        }
+
+        // 5. Взимане за Редакция (GET)
+        public PatientInputModel GetPatientForEdit(int id)
+        {
+            var patient = _context.Patients.Find(id);
+            if (patient == null) return null;
+
+            return new PatientInputModel
+            {
+                Id = patient.PatientId,
+                Name = patient.Name,
+                Species = patient.Species,
+                Breed = patient.Breed,
+                Age = patient.Age ?? 0,
+                OwnerId = patient.OwnerId
+            };
+        }
+
+        // 6. Запазване на Редакция (POST)
+        public void UpdatePatient(PatientInputModel model)
+        {
+            var patient = _context.Patients.Find(model.Id);
+            if (patient != null)
+            {
+                patient.Name = model.Name;
+                patient.Species = model.Species;
+                patient.Breed = model.Breed;
+                patient.Age = model.Age;
+                patient.OwnerId = model.OwnerId;
+                _context.SaveChanges();
+            }
         }
     }
 }

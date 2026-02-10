@@ -5,35 +5,55 @@ using VetClinic.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+// =========================================================
+// 1. ЗОНА ЗА РЕГИСТРАЦИЯ НА УСЛУГИ (SERVICES)
+// Всички AddScoped и AddDbContext трябва да са ТУК (преди Build)
+// =========================================================
 
-// Add services to the container.
+// 1.1. Добавяне на MVC (Контролери и Views)
 builder.Services.AddControllersWithViews();
-// Добави това, за да се свържеш с SQL сървъра
+
+// 1.2. Връзка с SQL Server База данни
 builder.Services.AddDbContext<VetClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 1.3. Регистриране на твоите Сървиси (Services)
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IVaccinationService, VaccinationService>(); // <-- Това добавихме последно
+
+// =========================================================
+// 2. СГЛОБЯВАНЕ НА ПРИЛОЖЕНИЕТО (BUILD)
+// След този ред НЕ можеш да ползваш builder.Services!
+// =========================================================
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// =========================================================
+// 3. КОНФИГУРАЦИЯ НА HTTP REQUEST PIPELINE
+// =========================================================
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
+// Важно за зареждане на CSS, JS и картинки от wwwroot
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// Ако ползваш .NET 9, тези редове са стандартни, но UseStaticFiles по-горе е по-важният
+// за стандартните папки.
+// app.MapStaticAssets(); 
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+// .WithStaticAssets(); // Можеш да го махнеш, ако дава грешка, но в .NET 9 е ОК.
 
 app.Run();

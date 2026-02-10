@@ -1,0 +1,35 @@
+﻿@model VetClinic.Models.ViewModels.VaccinationInputModel
+@{
+    ViewData["Title"] = "Нова ваксина";
+}
+
+<div class="container mt-4 col-md-6">
+    <div class="card shadow border-success">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">💉 Добавяне на ваксина</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <input type="hidden" asp-for="PatientId" />
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Име на ваксина / Препарат</label>
+                    <input asp-for="Name" class="form-control" placeholder="Напр. Бяс, DHLPP..." />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DateAdministered" class="form-label"></label>
+                        <input asp-for="DateAdministered" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NextDueDate" class="form-label">Следваща дата</label>
+                        <input asp-for="NextDueDate" type="date" class="form-control" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Запиши</button>
+            </form>
+        </div>
+    </div>
+</div>

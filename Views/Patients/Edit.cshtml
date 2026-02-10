@@ -1,0 +1,63 @@
+﻿@model VetClinic.Models.ViewModels.PatientInputModel
+
+@{
+    ViewData["Title"] = "Редактиране на пациент";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">✏️ Редактиране на данни</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Име на животното</label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Species" class="form-label">Вид</label>
+                                <select asp-for="Species" class="form-select">
+                                    <option value="Куче">Куче</option>
+                                    <option value="Котка">Котка</option>
+                                    <option value="Заек">Заек</option>
+                                    <option value="Птица">Птица</option>
+                                    <option value="Друго">Друго</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Breed" class="form-label">Порода</label>
+                                <input asp-for="Breed" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Age" class="form-label">Възраст (години)</label>
+                            <input asp-for="Age" type="number" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OwnerId" class="form-label">Собственик</label>
+                            <select asp-for="OwnerId" class="form-control" asp-items="ViewBag.Owners"></select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">💾 Запази промените</button>
+
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                                Отказ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

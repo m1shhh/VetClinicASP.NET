@@ -18,12 +18,15 @@ namespace VetClinic.Controllers
             _patientService = patientService;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string searchString)
         {
-            // 3. Взимаме пациентите от базата
-            var patients = _patientService.GetAllPatients();
+            // Запазваме думата, за да си остане в полето след презареждане
+            ViewBag.CurrentFilter = searchString;
 
-            // 4. ПОДАВАМЕ ги на View-то. Това оправя грешката "Model is null"
+            // Подаваме думата към сървиса, за да филтрира списъка
+            var patients = _patientService.GetAllPatients(searchString);
+
+            // Връщаме филтрирания списък към екрана
             return View(patients);
         }
 
