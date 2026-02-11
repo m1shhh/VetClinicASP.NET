@@ -20,5 +20,6 @@ public partial class Appointment
     public virtual Patient Patient { get; set; } = null!;
 
     public virtual Veterinarian Vet { get; set; } = null!;
-    public DateTime DateTime { get; internal set; }
+
+    // ИЗТРИХМЕ public DateTime DateTime... ОТ ТУК
 }

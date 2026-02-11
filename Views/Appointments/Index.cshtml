@@ -1,0 +1,85 @@
+﻿@model IEnumerable<VetClinicASP.NET.Models.Appointment>
+
+@{
+    ViewData["Title"] = "График прегледи";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📅 График на прегледите</h2>
+        <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary">
+            + Нов час
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Няма записани прегледи в системата.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Дата & Час</th>
+                            <th>Пациент</th>
+                            <th>Лекар</th>
+                            <th>Причина</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            // Проверка дали прегледът е минал
+                            bool isPast = item.AppointmentDate < DateOnly.FromDateTime(DateTime.Now);
+
+                            <tr class="@(isPast ? "text-muted bg-light" : "")">
+
+                                <td>
+                                    <div class="fw-bold">@item.AppointmentDate.ToString("dd.MM.yyyy")</div>
+                                    <small>@item.AppointmentTime.ToString("HH:mm") ч.</small>
+                                </td>
+
+                                <td>
+                                    <a asp-controller="Patients" asp-action="Details" asp-route-id="@item.PatientId" class="text-decoration-none fw-bold">
+                                        🐾 @item.Patient.Name
+                                    </a>
+                                    <div class="small text-muted">@item.Patient.Species / @item.Patient.Breed</div>
+                                </td>
+
+                                <td>
+                                    @if (item.Vet != null)
+                                    {
+                                        <span>👨‍⚕️ @item.Vet.FullName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">Не е назначен</span>
+                                    }
+                                </td>
+
+                                <td>@item.Reason</td>
+
+                                <td>
+                                    @if (isPast)
+                                    {
+                                        <span class="badge bg-secondary">Минал</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Предстоящ</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -133,5 +133,38 @@ namespace VetClinic.Services
                 _context.SaveChanges();
             }
         }
+        // 7. Изтриване на пациент
+        public void DeletePatient(int id)
+        {
+            var patient = _context.Patients.Find(id);
+
+            if (patient != null)
+            {
+                // 1. Изтриваме Прегледите (Appointments)
+                var appointments = _context.Appointments
+                    .Where(a => a.PatientId == id)
+                    .ToList();
+                _context.Appointments.RemoveRange(appointments);
+
+                // 2. Изтриваме Ваксините (Vaccinations)
+                var vaccinations = _context.Vaccinations
+                    .Where(v => v.PatientId == id)
+                    .ToList();
+                _context.Vaccinations.RemoveRange(vaccinations);
+
+                // 3. НОВО: Изтриваме Медицинските записи (MedicalRecords)
+                // Трябва да изчистим и тях, иначе базата няма да даде да изтрием пациента
+                var records = _context.MedicalRecords
+                    .Where(r => r.PatientId == id)
+                    .ToList();
+                _context.MedicalRecords.RemoveRange(records);
+
+                // 4. Най-накрая трием самия пациент
+                _context.Patients.Remove(patient);
+
+                // 5. Запазваме всичко
+                _context.SaveChanges();
+            }
+        }
     }
 }

@@ -1,0 +1,38 @@
+﻿@model VetClinic.Models.ViewModels.PatientDetailsViewModel
+
+@{
+    ViewData["Title"] = "Изтриване на пациент";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🚨 Внимание! Изтриване на запис</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">Сигурни ли сте, че искате да изтриете този пациент?</h5>
+                    <p class="card-text text-muted">Това действие е необратимо.</p>
+
+                    <div class="alert alert-warning">
+                        <strong>@Model.Name</strong> <br>
+                        (@Model.Species / @Model.Breed)
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑 Да, изтрий завинаги
+                        </button>
+
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-lg">
+                            Отказ
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

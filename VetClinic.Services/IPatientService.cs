@@ -13,5 +13,8 @@ namespace VetClinic.Services
         // Методи за редакция
         PatientInputModel GetPatientForEdit(int id);
         void UpdatePatient(PatientInputModel model);
+
+        //delete method
+        void DeletePatient(int id);
     }
 }

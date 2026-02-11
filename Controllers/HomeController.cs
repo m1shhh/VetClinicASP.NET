@@ -1,32 +1,43 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using VetClinic.Models.ViewModels;
-using VetClinic.Services; // Важно: за да ползваме услугата
-using VetClinicASP.NET.Models;
+using VetClinic.Services;
+using VetClinicASP.NET.Models; // За контекста и моделите
 
 namespace VetClinic.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IPatientService _patientService; // 1. Дефинираме услугата
+        private readonly IPatientService _patientService;
+        private readonly VetClinicContext _context; // 1. НОВО: Добавяме контекста за статистиката
 
-        // 2. Инжектираме услугата през конструктора
-        public HomeController(ILogger<HomeController> logger, IPatientService patientService)
+        // 2. Обновяваме конструктора, за да приема и Context
+        public HomeController(ILogger<HomeController> logger, IPatientService patientService, VetClinicContext context)
         {
             _logger = logger;
             _patientService = patientService;
+            _context = context; // Запазваме го
         }
 
         public IActionResult Index(string searchString)
         {
-            // Запазваме думата, за да си остане в полето след презареждане
-            ViewBag.CurrentFilter = searchString;
+            // --- НОВА ЧАСТ: СТАТИСТИКА ЗА DASHBOARD ---
+            // Използваме контекста директно, за да преброим записите бързо
+            ViewBag.TotalPatients = _context.Patients.Count();
+            ViewBag.TotalDoctors = _context.Veterinarians.Count();
 
-            // Подаваме думата към сървиса, за да филтрира списъка
+            // Броим прегледите за днес
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            ViewBag.AppointmentsToday = _context.Appointments
+                .Where(a => a.AppointmentDate == today)
+                .Count();
+            // ------------------------------------------
+
+            // Старата логика за търсене
+            ViewBag.CurrentFilter = searchString;
             var patients = _patientService.GetAllPatients(searchString);
 
-            // Връщаме филтрирания списък към екрана
             return View(patients);
         }
 
@@ -40,35 +51,32 @@ namespace VetClinic.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-        // 1. GET: Отваря празната форма
+
+        // --- МЕТОДИ ЗА СЪЗДАВАНЕ НА ПАЦИЕНТ (Запазваме ги както са си) ---
+
         [HttpGet]
         public IActionResult Create()
         {
-            // Зареждаме собствениците за падащото меню
             var owners = _patientService.GetOwnersList();
-
-            // Изпращаме ги към View-то чрез ViewBag
             ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
 
-            return View();
+            // ПРОМЯНА: Указваме пълния път до файла
+            return View("~/Views/Patients/Create.cshtml");
         }
 
-        // 2. POST: Приема данните и записва
         [HttpPost]
         public IActionResult Create(PatientInputModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Ако има грешка, връщаме потребителя обратно във формата
                 var owners = _patientService.GetOwnersList();
                 ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
-                return View(model);
+
+                // ПРОМЯНА: Връщаме правилния файл + модела с грешките
+                return View("~/Views/Patients/Create.cshtml", model);
             }
 
-            // Записваме
             _patientService.AddPatient(model);
-
-            // Връщаме се към списъка
             return RedirectToAction("Index");
         }
     }

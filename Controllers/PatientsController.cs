@@ -114,5 +114,30 @@ namespace VetClinic.Controllers
         // ---------------------------------------------------------
         // КРАЙ НА EDIT МЕТОДИТЕ
         // ---------------------------------------------------------
+
+        // GET: Показва страница за потвърждение
+        [HttpGet]
+        public IActionResult Delete(int id)
+        {
+            // Използваме готовия метод за детайли, за да покажем кой трием
+            var patient = _patientService.GetPatientDetails(id);
+
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            return View(patient);
+        }
+
+        // POST: Реалното изтриване
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            _patientService.DeletePatient(id);
+
+            // Връщаме към началния списък (Home)
+            return RedirectToAction("Index", "Home");
+        }
     }
 }

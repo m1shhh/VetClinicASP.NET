@@ -13,31 +13,40 @@
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" method="post">
-                        <input type="hidden" asp-for="PatientId" />
 
                         <div class="mb-3">
-                            <label asp-for="DateTime" class="form-label"></label>
-                            <input asp-for="DateTime" class="form-control" type="datetime-local" />
+                            <label asp-for="PatientId" class="form-label">Пациент</label>
+                            <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients">
+                                <option value="">-- Избери пациент --</option>
+                            </select>
+                            <span asp-validation-for="PatientId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DateTime" class="form-label">Дата и час</label>
+                            <input asp-for="DateTime" class="form-control" type="datetime-local"
+                                   value="@Model.DateTime.ToString("yyyy-MM-ddTHH:mm")" />
                             <span asp-validation-for="DateTime" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="VeterinarianId" class="form-label"></label>
+                            <label asp-for="VeterinarianId" class="form-label">Лекуващ лекар</label>
                             <select asp-for="VeterinarianId" class="form-select" asp-items="ViewBag.Doctors">
-                                <option value="">-- Избери лекуващ лекар --</option>
+                                <option value="">-- Избери лекар --</option>
                             </select>
                             <span asp-validation-for="VeterinarianId" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Reason" class="form-label"></label>
+                            <label asp-for="Reason" class="form-label">Причина / Оплаквания</label>
                             <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Оплаквания, симптоми, диагноза..."></textarea>
                             <span asp-validation-for="Reason" class="text-danger"></span>
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">Запиши прегледа</button>
-                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-secondary">Отказ</a>
+                            <button type="submit" class="btn btn-primary btn-lg">💾 Запази прегледа</button>
+
+                            <a asp-action="Index" class="btn btn-secondary">Отказ</a>
                         </div>
                     </form>
                 </div>

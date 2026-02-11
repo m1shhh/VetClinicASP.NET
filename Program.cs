@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1.1. Добавяне на MVC (Контролери и Views)
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddScoped<IVeterinarianService, VeterinarianService>();
 // 1.2. Връзка с SQL Server База данни
 builder.Services.AddDbContext<VetClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -6,5 +6,7 @@ namespace VetClinic.Services
     {
         List<KeyValuePair<string, string>> GetDoctorsList();
         void AddAppointment(AppointmentInputModel model);
+
+        List<VetClinicASP.NET.Models.Appointment> GetAllAppointments();
     }
 }
