@@ -53,5 +53,35 @@ namespace VetClinic.Services
                 .ThenBy(a => a.AppointmentTime)
                 .ToList();
         }
+        // 1. Промени метода GetAllAppointments така:
+        public List<Appointment> GetAllAppointments(int? vetId = null)
+        {
+            var query = _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Vet)
+                .AsQueryable(); // Позволява ни да добавяме условия динамично
+
+            // Ако сме подали ID на лекар, филтрираме
+            if (vetId.HasValue)
+            {
+                query = query.Where(a => a.VetId == vetId.Value);
+            }
+
+            return query
+                .OrderByDescending(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
+                .ToList();
+        }
+
+        // 2. Добави новия метод най-отдолу в класа:
+        public void DeleteAppointment(int id)
+        {
+            var appointment = _context.Appointments.Find(id);
+            if (appointment != null)
+            {
+                _context.Appointments.Remove(appointment);
+                _context.SaveChanges();
+            }
+        }
     }
 }

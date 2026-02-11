@@ -38,5 +38,11 @@ namespace VetClinic.Controllers
             }
             return View(vet);
         }
+        // Добави този метод в контролера:
+        public IActionResult Delete(int id)
+        {
+            _vetService.DeleteVeterinarian(id);
+            return RedirectToAction("Index");
+        }
     }
 }

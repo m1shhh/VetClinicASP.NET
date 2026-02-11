@@ -8,69 +8,87 @@ namespace VetClinic.Controllers
     public class AppointmentsController : Controller
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly IPatientService _patientService; // 1. НОВО: Трябва ни за списъка с пациенти
+        private readonly IPatientService _patientService;
 
-        // Инжектираме и двата сървиса
-        public AppointmentsController(IAppointmentService appointmentService, IPatientService patientService)
+        // 1. НОВО: Добавяме поле за VetService
+        private readonly IVeterinarianService _vetService;
+
+        // 2. Обновяваме конструктора да приема и трите сервиза
+        public AppointmentsController(
+            IAppointmentService appointmentService,
+            IPatientService patientService,
+            IVeterinarianService vetService) // <--- Тук добавихме vetService
         {
             _appointmentService = appointmentService;
             _patientService = patientService;
+            _vetService = vetService; // <--- Тук го присвояваме
         }
 
-        public IActionResult Index()
+        // 3. INDEX: Списък с филтър
+        public IActionResult Index(int? vetId)
         {
-            var appointments = _appointmentService.GetAllAppointments();
+            // Тук вече _vetService съществува и няма да гърми!
+            if (vetId.HasValue)
+            {
+                var vet = _vetService.GetVeterinarianById(vetId.Value);
+                ViewBag.FilterName = vet != null ? $"на Д-р {vet.FullName}" : "";
+                ViewBag.CurrentVetId = vetId;
+            }
+            else
+            {
+                ViewBag.FilterName = "";
+                ViewBag.CurrentVetId = null;
+            }
+
+            var appointments = _appointmentService.GetAllAppointments(vetId);
             return View(appointments);
         }
 
-        // GET: Отваря формата
-        // ПРОМЯНА: int? patientId (въпросителната значи, че може и да е null/празно)
+        // 4. GET: Създаване
         [HttpGet]
         public IActionResult Create(int? patientId)
         {
             var model = new AppointmentInputModel
             {
-                DateTime = DateTime.Now // Слагаме днешна дата
+                DateTime = DateTime.Now
             };
 
-            // Ако имаме подадено ID (идваме от Досие), го попълваме предварително
             if (patientId.HasValue)
             {
                 model.PatientId = patientId.Value;
             }
 
-            // 2. ЗАРЕЖДАНЕ НА СПИСЪЦИТЕ (Dropdowns)
             LoadDropdowns();
-
             return View(model);
         }
 
-        // POST: Записва в базата
+        // 5. POST: Запазване
         [HttpPost]
         public IActionResult Create(AppointmentInputModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Ако има грешка, презареждаме списъците, иначе ще гръмне View-то
                 LoadDropdowns();
                 return View(model);
             }
 
             _appointmentService.AddAppointment(model);
-
-            // Връщаме се в Графика (защото е по-удобно да видиш новия час там)
             return RedirectToAction("Index");
         }
 
-        // Помощен метод за зареждане на падащите менюта
+        // 6. DELETE: Изтриване
+        public IActionResult Delete(int id)
+        {
+            _appointmentService.DeleteAppointment(id);
+            return RedirectToAction("Index");
+        }
+
+        // Помощен метод
         private void LoadDropdowns()
         {
-            // Лекари
             var doctors = _appointmentService.GetDoctorsList();
             ViewBag.Doctors = new SelectList(doctors, "Key", "Value");
 
-            // Пациенти (За да можем да избираме куче, ако не е избрано)
-            // Тук ползваме GetAllPatients. Ако иска search term, подаваме null.
             var patients = _patientService.GetAllPatients(null);
             ViewBag.Patients = new SelectList(patients, "Id", "Name");
         }

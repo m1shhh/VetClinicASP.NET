@@ -21,6 +21,7 @@ builder.Services.AddDbContext<VetClinicContext>(options =>
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IVaccinationService, VaccinationService>(); // <-- Това добавихме последно
+builder.Services.AddScoped<IOwnerService, OwnerService>();
 
 // =========================================================
 // 2. СГЛОБЯВАНЕ НА ПРИЛОЖЕНИЕТО (BUILD)

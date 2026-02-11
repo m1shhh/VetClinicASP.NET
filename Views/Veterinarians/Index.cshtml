@@ -26,8 +26,28 @@
                         @* <p class="text-muted">@vet.Specialization</p> *@
 
                         <hr />
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">@vet.FullName</h5>
+
+                            <hr />
+                            <div class="d-grid gap-2">
+                                <a asp-controller="Appointments" asp-action="Index" asp-route-vetId="@vet.VetId"
+                                   class="btn btn-outline-primary btn-sm">
+                                    📅 Виж график
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@vet.VetId"
+                                   class="btn btn-outline-danger btn-sm"
+                                   onclick="return confirm('ВНИМАНИЕ: Сигурни ли сте, че искате да премахнете този лекар от системата?');">
+                                    🗑 Изтрий лекаря
+                                </a>
+                            </div>
+                        </div>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-outline-primary btn-sm">Виж график</button>
+                            <a asp-controller="Appointments" asp-action="Index" asp-route-vetId="@vet.VetId"
+                               class="btn btn-outline-primary btn-sm">
+                                📅 Виж график
+                            </a>
                         </div>
                     </div>
                 </div>

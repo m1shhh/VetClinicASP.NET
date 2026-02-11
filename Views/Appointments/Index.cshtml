@@ -6,8 +6,18 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📅 График на прегледите</h2>
-        <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary">
+        <div>
+            <h2>📅 График @ViewBag.FilterName</h2>
+
+            @if (ViewBag.CurrentVetId != null)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary mt-1">
+                    ↩ Покажи всички лекари
+                </a>
+            }
+        </div>
+
+        <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary shadow">
             + Нов час
         </a>
     </div>
@@ -15,7 +25,7 @@
     @if (!Model.Any())
     {
         <div class="alert alert-info">
-            Няма записани прегледи в системата.
+            Няма записани прегледи по тези критерии.
         </div>
     }
     else
@@ -30,41 +40,37 @@
                             <th>Лекар</th>
                             <th>Причина</th>
                             <th>Статус</th>
+                            <th class="text-end">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            // Проверка дали прегледът е минал
                             bool isPast = item.AppointmentDate < DateOnly.FromDateTime(DateTime.Now);
 
                             <tr class="@(isPast ? "text-muted bg-light" : "")">
-
                                 <td>
                                     <div class="fw-bold">@item.AppointmentDate.ToString("dd.MM.yyyy")</div>
                                     <small>@item.AppointmentTime.ToString("HH:mm") ч.</small>
                                 </td>
-
                                 <td>
                                     <a asp-controller="Patients" asp-action="Details" asp-route-id="@item.PatientId" class="text-decoration-none fw-bold">
                                         🐾 @item.Patient.Name
                                     </a>
-                                    <div class="small text-muted">@item.Patient.Species / @item.Patient.Breed</div>
                                 </td>
-
                                 <td>
                                     @if (item.Vet != null)
                                     {
-                                        <span>👨‍⚕️ @item.Vet.FullName</span>
+                                        <a asp-action="Index" asp-route-vetId="@item.VetId" class="text-decoration-none text-dark" title="Кликни за филтър">
+                                            👨‍⚕️ @item.Vet.FullName
+                                        </a>
                                     }
                                     else
                                     {
                                         <span class="text-danger">Не е назначен</span>
                                     }
                                 </td>
-
                                 <td>@item.Reason</td>
-
                                 <td>
                                     @if (isPast)
                                     {
@@ -72,8 +78,17 @@
                                     }
                                     else
                                     {
+
                                         <span class="badge bg-success">Предстоящ</span>
                                     }
+                                </td>
+
+                                <td class="text-end">
+                                    <a asp-action="Delete" asp-route-id="@item.AppointmentId"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Сигурни ли сте, че искате да изтриете този час?');">
+                                        ❌ Изтрий
+                                    </a>
                                 </td>
                             </tr>
                         }

@@ -1,6 +1,55 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "За автора";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 overflow-hidden">
+        <div class="row g-0">
+
+            <div class="col-md-4 bg-primary d-flex align-items-center justify-content-center p-4">
+                <div class="text-center">
+                    <img src="~/images/me.png"
+                         alt="Михаил Томов"
+                         class="img-fluid rounded-circle shadow border border-4 border-white"
+                         style="width: 200px; height: 200px; object-fit: cover;">
+
+                    <h3 class="text-white mt-3 fw-bold">Михаил Томов</h3>
+                    <span class="badge bg-light text-primary">12в клас</span>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-primary mb-3">👋 Здравейте!</h2>
+                    <h5 class="text-muted mb-4">Ученик в ПГХТ "Акад. Н. Д. Зелинский"</h5>
+
+                    <hr class="mb-4" />
+
+                    <p class="card-text lead">
+                        Аз съм изключително амбициозен човек с интерес към програмирането и дигиталните технологии.
+                        Винаги се стремя да надграждам уменията си и да създавам неща, които са полезни за хората.
+                    </p>
+
+                    <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
+                        <i class="fa fa-heart fa-2x me-3"></i>
+                        <div>
+                            <strong>Моето вдъхновение:</strong>
+                            <br />
+                            Сестра ми е ветеринарен лекар и нейната отдаденост към животните ме мотивира да създам
+                            тази информационна система, за да улесня работата в клиниката.
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6>🛠 Технологии, използвани в проекта:</h6>
+                        <span class="badge bg-secondary">C#</span>
+                        <span class="badge bg-secondary">ASP.NET Core</span>
+                        <span class="badge bg-secondary">Entity Framework</span>
+                        <span class="badge bg-secondary">SQL Server</span>
+                        <span class="badge bg-secondary">Bootstrap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
