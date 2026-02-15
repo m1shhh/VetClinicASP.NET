@@ -1,0 +1,59 @@
+﻿@model VetClinicASP.NET.Models.Veterinarian
+
+@{
+    ViewData["Title"] = "Редакция на лекар";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">✏️ Редакция на данни</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <input type="hidden" asp-for="VetId" />
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label">Име и Фамилия</label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Specialization" class="form-label">Специалност</label>
+                            <input asp-for="Specialization" class="form-control" />
+                            <span asp-validation-for="Specialization" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Телефон</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="WorkingHours" class="form-label">Работно време</label>
+                            <input asp-for="WorkingHours" class="form-control" placeholder="напр. 09:00 - 18:00" />
+                            <span asp-validation-for="WorkingHours" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">💾 Запази промените</button>
+                            <a asp-action="Index" class="btn btn-secondary">Отказ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

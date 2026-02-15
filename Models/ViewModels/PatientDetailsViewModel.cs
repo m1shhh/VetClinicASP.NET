@@ -29,9 +29,14 @@
     // НОВО: Клас за един преглед
     public class VisitViewModel
     {
+        public int RecordId { get; set; } // <--- НОВО: За да знаем кой картон редактираме
+
         public DateTime Date { get; set; }
-        public string Reason { get; set; } // Причина / Диагноза
-        public string DoctorName { get; set; } // Кой го е прегледал
+        public string Reason { get; set; }
+        public string DoctorName { get; set; }
+        public string Diagnosis { get; set; }
+        public string Treatment { get; set; }
+        public string Notes { get; set; }
     }
 
 }

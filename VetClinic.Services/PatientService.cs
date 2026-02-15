@@ -71,7 +71,8 @@ namespace VetClinic.Services
         {
             var patient = _context.Patients
                 .Include(p => p.Owner)
-                .Include(p => p.Appointments).ThenInclude(a => a.Vet)
+                // ДОБАВЕНО: Включваме MedicalRecords и техния Vet
+                .Include(p => p.MedicalRecords).ThenInclude(mr => mr.Vet)
                 .Include(p => p.Vaccinations)
                 .Where(p => p.PatientId == id)
                 .Select(p => new PatientDetailsViewModel
@@ -84,12 +85,20 @@ namespace VetClinic.Services
                     OwnerName = p.Owner.FullName,
                     OwnerPhone = p.Owner.PhoneNumber,
                     OwnerAddress = p.Owner.Address,
-                    Visits = p.Appointments.Select(a => new VisitViewModel
+
+                    // ПРОМЕНЕНО: Сега четем от MedicalRecords вместо от Appointments
+                    Visits = p.MedicalRecords.Select(mr => new VisitViewModel
                     {
-                        Date = a.AppointmentDate.ToDateTime(a.AppointmentTime),
-                        Reason = a.Reason,
-                        DoctorName = a.Vet != null ? a.Vet.FullName : "Неизвестен"
+                        RecordId = mr.RecordId, // <--- ДОБАВИ САМО ТОЗИ РЕД ТУК
+
+                        Date = mr.RecordDate ?? DateTime.MinValue,
+                        Reason = mr.Diagnosis,
+                        Diagnosis = mr.Diagnosis,
+                        Treatment = mr.Treatment,
+                        Notes = mr.Notes,
+                        DoctorName = mr.Vet != null ? mr.Vet.FullName : "Неизвестен"
                     }).OrderByDescending(v => v.Date).ToList(),
+
                     Vaccinations = p.Vaccinations.Select(v => new VaccinationViewModel
                     {
                         VaccineName = v.VaccineName,

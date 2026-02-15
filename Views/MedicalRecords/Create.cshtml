@@ -1,0 +1,63 @@
+﻿@model VetClinicASP.NET.Models.MedicalRecord
+
+@{
+    ViewData["Title"] = "Нов преглед";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">🩺 Нов преглед за: @ViewBag.PatientName</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <input type="hidden" asp-for="PatientId" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="RecordDate" class="form-label">Дата и час на прегледа</label>
+                                <input asp-for="RecordDate" type="datetime-local" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VetId" class="form-label">Лекуващ лекар</label>
+                                <select asp-for="VetId" class="form-select" asp-items="ViewBag.Vets">
+                                    <option value="">-- Изберете лекар --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Diagnosis" class="form-label">Диагноза</label>
+                            <input asp-for="Diagnosis" class="form-control" placeholder="напр. Инфекция на ухото" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Treatment" class="form-label">Назначено лечение / Терапия</label>
+                            <textarea asp-for="Treatment" class="form-control" rows="2" placeholder="напр. Почистване, капки за уши 2 пъти дневно"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Допълнителни бележки</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="напр. Животното е неспокойно, да се следи температурата утре"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-secondary me-md-2">Отказ</a>
+                            <button type="submit" class="btn btn-primary">💾 Запази картона</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

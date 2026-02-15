@@ -33,8 +33,10 @@ namespace VetClinic.Services
             if (existingVet != null)
             {
                 existingVet.FullName = vet.FullName;
-                existingVet.Specialization = vet.Specialization; // Увери се, че имаш такова поле в модела
-                existingVet.PhoneNumber = vet.PhoneNumber;       // И това
+                existingVet.Specialization = vet.Specialization;
+                existingVet.PhoneNumber = vet.PhoneNumber;
+                existingVet.WorkingHours = vet.WorkingHours; 
+                existingVet.Email = vet.Email;               
 
                 _context.SaveChanges();
             }

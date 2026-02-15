@@ -38,6 +38,30 @@ namespace VetClinic.Controllers
             }
             return View(vet);
         }
+
+        // 1. Зареждане на данните за редакция (GET)
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var vet = _vetService.GetVeterinarianById(id);
+            if (vet == null)
+            {
+                return NotFound();
+            }
+            return View(vet);
+        }
+
+        // 2. Запазване на промените (POST)
+        [HttpPost]
+        public IActionResult Edit(Veterinarian vet)
+        {
+            if (ModelState.IsValid)
+            {
+                _vetService.UpdateVeterinarian(vet);
+                return RedirectToAction("Index");
+            }
+            return View(vet);
+        }
         // Добави този метод в контролера:
         public IActionResult Delete(int id)
         {

@@ -33,6 +33,12 @@
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="WorkingHours" class="form-label">Работно време</label>
+                            <input asp-for="WorkingHours" class="form-control" placeholder="напр. 09:00 - 18:00" />
+                            <span asp-validation-for="WorkingHours" class="text-danger"></span>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success">💾 Запази лекаря</button>
                             <a asp-action="Index" class="btn btn-secondary">Отказ</a>

@@ -49,39 +49,68 @@
         </div>
 
         <div class="tab-pane fade" id="history" role="tabpanel">
-            <div class="d-flex justify-content-between mb-3">
-                <h5>Хронология на прегледите</h5>
-                <a asp-controller="Appointments" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-primary">
+            <div class="d-flex justify-content-between mb-3 mt-3">
+                <h5>Хронология на прегледите (Медицински картон)</h5>
+                <a asp-controller="MedicalRecords" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-primary">
                     + Нов преглед
                 </a>
             </div>
 
             @if (Model.Visits != null && Model.Visits.Any())
             {
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Причина / Диагноза</th>
-                            <th>Лекар</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var visit in Model.Visits)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <td>@visit.Date.ToString("dd.MM.yyyy HH:mm")</td>
-                                <td>@visit.Reason</td>
-                                <td>👨‍⚕️ @visit.DoctorName</td>
+                                <th>Дата</th>
+                                <th>Диагноза</th>
+                                <th>Лечение</th>
+                                <th>Бележки</th>
+                                <th>Лекар</th>
+                                <th>Действия</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var visit in Model.Visits)
+                            {
+                                <tr>
+                                    <td style="white-space: nowrap;">@visit.Date.ToString("dd.MM.yyyy HH:mm")</td>
+
+                                    <td>@(visit.Diagnosis ?? "Няма данни")</td>
+
+                                    <td>@(visit.Treatment ?? "-")</td>
+
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(visit.Notes))
+                                        {
+                                            <span class="text-muted small">@visit.Notes</span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+
+                                    <td style="white-space: nowrap;">👨‍⚕️ @visit.DoctorName</td>
+
+                                    <td style="white-space: nowrap;">
+                                        <a asp-controller="MedicalRecords" asp-action="Edit" asp-route-id="@visit.RecordId" class="btn btn-sm btn-outline-warning" title="Редактирай">
+                                            ✏️
+                                        </a>
+                                        <a asp-controller="MedicalRecords" asp-action="Delete" asp-route-id="@visit.RecordId" class="btn btn-sm btn-outline-danger" title="Изтрий" onclick="return confirm('Сигурни ли сте, че искате да изтриете този картон?');">
+                                            🗑
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {
                 <div class="alert alert-light border">
-                    <i class="fa fa-info-circle"></i> Няма записани прегледи за този пациент до момента.
+                    <i class="fa fa-info-circle"></i> Няма записани прегледи (медицински картони) за този пациент до момента.
                 </div>
             }
         </div>
