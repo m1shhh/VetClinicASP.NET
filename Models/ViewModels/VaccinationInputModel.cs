@@ -1,9 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace VetClinic.Models.ViewModels
 {
     public class VaccinationInputModel
     {
+        // ДОБАВЕНО: Задължително за Edit метода, за да знаем коя ваксина редактираме!
+        public int VaccinationId { get; set; }
+
         public int PatientId { get; set; }
 
         [Required]

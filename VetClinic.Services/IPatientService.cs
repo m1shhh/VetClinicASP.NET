@@ -5,7 +5,8 @@ namespace VetClinic.Services
 {
     public interface IPatientService
     {
-        List<PatientViewModel> GetAllPatients(string? searchTerm = null);
+        // Промени сигнатурата, за да приема filterType
+        List<PatientViewModel> GetAllPatients(string searchString = null, string filterType = "name", string sortOrder = "asc");
         void AddPatient(PatientInputModel model);
         List<KeyValuePair<string, string>> GetOwnersList();
         PatientDetailsViewModel GetPatientDetails(int id);

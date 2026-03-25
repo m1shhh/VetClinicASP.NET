@@ -4,53 +4,55 @@
     ViewData["Title"] = "Нов преглед";
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">🩺 Записване на преглед</h4>
+<div class="container mt-4 col-md-6">
+    <div class="card shadow border-success">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">🩺 Записване на преглед</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+
+                <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+
+                <div class="mb-3">
+                    <label asp-for="PatientId" class="form-label fw-bold">Пациент</label>
+                    <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients">
+                        <option value="">-- Избери пациент --</option>
+                    </select>
+                    <span asp-validation-for="PatientId" class="text-danger small"></span>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Create" method="post">
 
-                        <div class="mb-3">
-                            <label asp-for="PatientId" class="form-label">Пациент</label>
-                            <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients">
-                                <option value="">-- Избери пациент --</option>
-                            </select>
-                            <span asp-validation-for="PatientId" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="DateTime" class="form-label">Дата и час</label>
-                            <input asp-for="DateTime" class="form-control" type="datetime-local"
-                                   value="@Model.DateTime.ToString("yyyy-MM-ddTHH:mm")" />
-                            <span asp-validation-for="DateTime" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="VeterinarianId" class="form-label">Лекуващ лекар</label>
-                            <select asp-for="VeterinarianId" class="form-select" asp-items="ViewBag.Doctors">
-                                <option value="">-- Избери лекар --</option>
-                            </select>
-                            <span asp-validation-for="VeterinarianId" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Reason" class="form-label">Анамнеза</label>
-                            <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Оплаквания, симптоми, диагноза..."></textarea>
-                            <span asp-validation-for="Reason" class="text-danger"></span>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">💾 Запази прегледа</button>
-
-                            <a asp-action="Index" class="btn btn-secondary">Отказ</a>
-                        </div>
-                    </form>
+                <div class="mb-3">
+                    <label asp-for="DateTime" class="form-label fw-bold">Дата и час</label>
+                    <input asp-for="DateTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="DateTime" class="text-danger small"></span>
                 </div>
-            </div>
+
+                <div class="mb-3">
+                    <label asp-for="VeterinarianId" class="form-label fw-bold">Лекуващ лекар</label>
+                    <select asp-for="VeterinarianId" class="form-select" asp-items="ViewBag.Doctors">
+                        <option value="">-- Избери лекар --</option>
+                    </select>
+                    <span asp-validation-for="VeterinarianId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Reason" class="form-label fw-bold">Анамнеза / Причина</label>
+                    <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Оплаквания, симптоми..."></textarea>
+                    <span asp-validation-for="Reason" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-success btn-lg fw-bold">💾 Запази прегледа</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Отказ</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

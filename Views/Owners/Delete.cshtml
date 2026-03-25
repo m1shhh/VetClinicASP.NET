@@ -1,0 +1,39 @@
+﻿@model VetClinicASP.NET.Models.Owner
+
+@{
+    ViewData["Title"] = "Изтриване на клиент";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🚨 Внимание! Изтриване на клиент</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">Сигурни ли сте, че искате да изтриете този клиент?</h5>
+                    <p class="card-text text-danger fw-bold">Внимание: Ако изтриете собственика, ще бъдат изтрити и всички негови животни!</p>
+
+                    <div class="alert alert-warning">
+                        <strong>@Model.FullName</strong> <br>
+                        📞 @Model.PhoneNumber <br>
+                        📍 @Model.Address
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="OwnerId" />
+
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑 Да, изтрий завинаги
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-secondary btn-lg">
+                            Отказ
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -40,10 +40,53 @@ namespace VetClinic.Controllers
         }
 
         // 4. Изтриване
+        // 1. GET: Зарежда страницата за потвърждение (Delete.cshtml)
+        [HttpGet]
         public IActionResult Delete(int id)
         {
-            _ownerService.DeleteOwner(id);
+            var owner = _ownerService.GetOwnerById(id);
+            if (owner == null) return NotFound();
+
+            return View(owner);
+        }
+
+        // 2. POST: Извършва реалното изтриване след натискане на червения бутон
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int OwnerId)
+        {
+            _ownerService.DeleteOwner(OwnerId);
             return RedirectToAction("Index");
+        }
+        // ---------------------------------------------------------
+        // НАЧАЛО НА EDIT МЕТОДИТЕ
+        // ---------------------------------------------------------
+
+        // 5. GET: Отваря формата за редакция с попълнени данни
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var owner = _ownerService.GetOwnerById(id);
+
+            if (owner == null)
+            {
+                return NotFound();
+            }
+
+            return View(owner);
+        }
+
+        // 6. POST: Запазва промените в базата
+        [HttpPost]
+        public IActionResult Edit(Owner owner)
+        {
+            if (ModelState.IsValid)
+            {
+                _ownerService.UpdateOwner(owner);
+                return RedirectToAction("Index");
+            }
+
+            // Ако има грешка във валидацията, връщаме потребителя във формата
+            return View(owner);
         }
     }
 }

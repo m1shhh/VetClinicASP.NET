@@ -33,5 +33,50 @@ namespace VetClinic.Services
             _context.Vaccinations.Add(vaccine);
             _context.SaveChanges();
         }
+        public VaccinationInputModel GetVaccinationForEdit(int id)
+        {
+            var vaccine = _context.Vaccinations.Find(id);
+            if (vaccine == null) return null;
+
+            return new VaccinationInputModel
+            {
+                VaccinationId = vaccine.VaccinationId, // Предполагам, че вече добави това поле
+                PatientId = vaccine.PatientId,
+                Name = vaccine.VaccineName,
+                DateAdministered = vaccine.DateAdministered.ToDateTime(TimeOnly.MinValue),
+                NextDueDate = vaccine.NextDueDate?.ToDateTime(TimeOnly.MinValue)
+            };
+        }
+
+        public void UpdateVaccination(VaccinationInputModel model)
+        {
+            var vaccine = _context.Vaccinations.Find(model.VaccinationId);
+            if (vaccine != null)
+            {
+                vaccine.VaccineName = model.Name;
+                vaccine.DateAdministered = DateOnly.FromDateTime(model.DateAdministered);
+                vaccine.NextDueDate = model.NextDueDate.HasValue
+                    ? DateOnly.FromDateTime(model.NextDueDate.Value)
+                    : null;
+
+                _context.SaveChanges();
+            }
+        }
+
+        public int GetPatientIdByVaccination(int id)
+        {
+            var vaccine = _context.Vaccinations.Find(id);
+            return vaccine?.PatientId ?? 0;
+        }
+
+        public void DeleteVaccination(int id)
+        {
+            var vaccine = _context.Vaccinations.Find(id);
+            if (vaccine != null)
+            {
+                _context.Vaccinations.Remove(vaccine);
+                _context.SaveChanges();
+            }
+        }
     }
 }

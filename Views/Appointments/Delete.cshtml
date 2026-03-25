@@ -1,0 +1,39 @@
+﻿@model VetClinicASP.NET.Models.Appointment
+
+@{
+    ViewData["Title"] = "Изтриване на час";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🚨 Внимание! Отмяна на преглед</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">Сигурни ли сте, че искате да изтриете този записан час?</h5>
+                    <p class="card-text text-muted">Това действие ще премахне часа от графика завинаги.</p>
+
+                    <div class="alert alert-warning">
+                        <strong>Пациент:</strong> @Model.Patient.Name <br>
+                        <strong>Дата:</strong> @Model.AppointmentDate.ToString("dd.MM.yyyy") <br>
+                        <strong>Час:</strong> @Model.AppointmentTime.ToString("HH:mm") ч.
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="AppointmentId" />
+
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑 Да, изтрий часа
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-secondary btn-lg">
+                            Отказ
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

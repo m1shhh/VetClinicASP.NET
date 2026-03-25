@@ -19,14 +19,15 @@ namespace VetClinic.Controllers
 
         // GET: /Patients
         // GET: Patients
-        public IActionResult Index(string searchString)
+        public IActionResult Index(string searchString, string filterType = "name", string sortOrder = "asc")
         {
+            // Запазваме изборите, за да ги покажем обратно във View-то
             ViewBag.CurrentFilter = searchString;
+            ViewBag.CurrentFilterType = filterType;
+            ViewBag.CurrentSort = sortOrder; // <--- НОВО
 
-            // ГРЕШКАТА ОБИКНОВЕНО Е ТУК:
-            // Увери се, че в скобите подаваш (searchString)!
-            // Ако пише само GetAllPatients(), то винаги търси "нищо" и връща всички записи.
-            var patients = _patientService.GetAllPatients(searchString);
+            // Подаваме и трите параметъра на сървиса
+            var patients = _patientService.GetAllPatients(searchString, filterType, sortOrder);
 
             return View(patients);
         }

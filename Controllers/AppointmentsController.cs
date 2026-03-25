@@ -77,7 +77,26 @@ namespace VetClinic.Controllers
         }
 
         // 6. DELETE: Изтриване
+        // 6. GET: Показва страницата за потвърждение за изтриване
+        [HttpGet]
         public IActionResult Delete(int id)
+        {
+            // Намираме записа чрез сервиза, за да покажем детайлите на екрана
+            // Увери се, че твоето View ползва модела, който връщаш тук
+            var appointment = _appointmentService.GetAppointmentById(id);
+
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            return View(appointment);
+        }
+
+        // 7. POST: Извършва реалното изтриване след натискане на червения бутон
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
         {
             _appointmentService.DeleteAppointment(id);
             return RedirectToAction("Index");

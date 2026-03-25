@@ -55,21 +55,40 @@
             </div>
         </div>
     </div>
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <form asp-action="Index" method="get" class="d-flex gap-2">
-                <input type="text"
-                       name="searchString"  <-- ТОВА Е КЛЮЧЪТ! Трябва да е точно "searchString"
-                                                value="@ViewBag.CurrentFilter"
-                                                class="form-control"
-                       placeholder="Търси по име на пациент или собственик..." />
+    <div class="row mb-4">
+        <div class="col-12">
+            <form asp-action="Index" method="get" class="d-flex flex-wrap gap-3 align-items-center w-100">
 
-                <button type="submit" class="btn btn-primary">
-                    🔍 Търсене
-                </button>
+                <div class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
+                    <input type="text"
+                           name="searchString"
+                           value="@ViewBag.CurrentFilter"
+                           class="form-control"
+                           placeholder="Въведете текст за търсене..." />
 
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    🗑️ Изчисти</a>
+                    <button type="submit" class="btn btn-primary text-nowrap">
+                        🔍 Търсене
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-outline-secondary text-nowrap">
+                        🗑️ Изчисти
+                    </a>
+                </div>
+
+                <div class="d-flex gap-2 ms-auto">
+                    <select name="filterType" class="form-select w-auto bg-light border-secondary">
+                        <option value="name" selected="@(ViewBag.CurrentFilterType == "name")">По име</option>
+                        <option value="owner" selected="@(ViewBag.CurrentFilterType == "owner")">По собственик</option>
+                        <option value="breed" selected="@(ViewBag.CurrentFilterType == "breed")">По порода</option>
+                        <option value="age" selected="@(ViewBag.CurrentFilterType == "age")">По възраст</option>
+                    </select>
+
+                    <select name="sortOrder" class="form-select w-auto bg-light border-secondary">
+                        <option value="asc" selected="@(ViewBag.CurrentSort == "asc")">Възходящ (А-Я / 0-9)</option>
+                        <option value="desc" selected="@(ViewBag.CurrentSort == "desc")">Низходящ (Я-А / 9-0)</option>
+                    </select>
+                </div>
+
             </form>
         </div>
     </div>

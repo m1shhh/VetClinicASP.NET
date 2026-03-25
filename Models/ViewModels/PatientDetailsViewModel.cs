@@ -21,9 +21,11 @@
     }
     public class VaccinationViewModel
     {
-        public DateTime DateAdministered { get; set; } // Кога е сложена
+        public int Id { get; set; } // <--- ДОБАВЕНО: За да работят бутоните Редакция/Изтриване
+
+        public DateTime DateAdministered { get; set; }
         public string VaccineName { get; set; } = null!;
-        public DateTime? NextDueDate { get; set; } // Кога е следващата (за напомняне)
+        public DateTime? NextDueDate { get; set; }
     }
 
     // НОВО: Клас за един преглед

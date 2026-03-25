@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VetClinic.Services;
 using VetClinicASP.NET.Models;
 
@@ -63,9 +64,26 @@ namespace VetClinic.Controllers
             return View(vet);
         }
         // Добави този метод в контролера:
+        [HttpGet]
+        [HttpGet]
+        // 1. GET: Зарежда страницата за потвърждение (Delete.cshtml)
+        [HttpGet]
         public IActionResult Delete(int id)
         {
-            _vetService.DeleteVeterinarian(id);
+            // Оправено: Използваме точното име от твоя сървис
+            var vet = _vetService.GetVeterinarianById(id);
+
+            if (vet == null) return NotFound();
+
+            return View(vet);
+        }
+
+        // 2. POST: Извършва реалното изтриване
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int VetId)
+        {
+            // Оправено: Използваме точното име от твоя сървис
+            _vetService.DeleteVeterinarian(VetId);
             return RedirectToAction("Index");
         }
     }

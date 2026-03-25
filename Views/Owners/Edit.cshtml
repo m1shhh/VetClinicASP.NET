@@ -1,0 +1,52 @@
+﻿@model VetClinicASP.NET.Models.Owner
+@{
+    ViewData["Title"] = "Редактиране на клиент";
+}
+
+<div class="container mt-4 col-md-6">
+    <div class="card shadow border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">✏️ Редактиране на клиент: @Model.FullName</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post">
+
+                <input type="hidden" asp-for="OwnerId" />
+
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label fw-bold">Име и Фамилия</label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label fw-bold">Телефонен номер</label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Address" class="form-label fw-bold">Адрес</label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        ⬅ Отказ
+                    </a>
+                    <button type="submit" class="btn btn-warning px-5 fw-bold">
+                        💾 Запази промените
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

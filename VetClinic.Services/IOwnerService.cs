@@ -1,19 +1,12 @@
 ﻿using VetClinicASP.NET.Models;
 
-namespace VetClinic.Services
+public interface IOwnerService
 {
-    public interface IOwnerService
-    {
-        // 1. Взима всички собственици
-        List<Owner> GetAllOwners();
+    IEnumerable<Owner> GetAllOwners();
+    void AddOwner(Owner owner);
+    void DeleteOwner(int id); // Увери се, че това го има за Delete бутона!
 
-        // 2. Взима конкретен собственик (за редакция или детайли)
-        Owner GetOwnerById(int id);
-
-        // 3. Добавяне
-        void AddOwner(Owner owner);
-
-        // 4. Изтриване
-        void DeleteOwner(int id);
-    }
+    // НОВИ МЕТОДИ ЗА РЕДАКЦИЯ:
+    Owner GetOwnerById(int id);
+    void UpdateOwner(Owner owner);
 }

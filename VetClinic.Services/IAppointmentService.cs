@@ -1,17 +1,19 @@
-﻿using VetClinicASP.NET.Models;
+﻿using System.Collections.Generic;
+using VetClinicASP.NET.Models;
+using VetClinic.Models.ViewModels;
 
 namespace VetClinic.Services
 {
     public interface IAppointmentService
     {
-        List<KeyValuePair<string, string>> GetDoctorsList();
+        // Увери се, че типът тук е точно IEnumerable<Appointment>
+        IEnumerable<Appointment> GetAllAppointments(int? vetId);
 
-        // ПРОМЯНА: Правим параметъра vetId незадължителен (nullable)
-        List<Appointment> GetAllAppointments(int? vetId = null);
+        // Увери се, че типът тук е точно IEnumerable<KeyValuePair<int, string>>
+        IEnumerable<KeyValuePair<int, string>> GetDoctorsList();
 
-        void AddAppointment(VetClinic.Models.ViewModels.AppointmentInputModel model);
-
-        // НОВО: Метод за изтриване
+        void AddAppointment(AppointmentInputModel model);
         void DeleteAppointment(int id);
+        Appointment GetAppointmentById(int id);
     }
 }

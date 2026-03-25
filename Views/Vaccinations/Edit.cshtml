@@ -1,0 +1,48 @@
+﻿@model VetClinic.Models.ViewModels.VaccinationInputModel
+@{
+    ViewData["Title"] = "Редактиране на ваксина";
+}
+
+<div class="container mt-4 col-md-6">
+    <div class="card shadow border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0">✏️ Редактиране на ваксина</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="PatientId" />
+                <input type="hidden" asp-for="VaccinationId" />
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Име на ваксина / Препарат</label>
+                    <input asp-for="Name" class="form-control" placeholder="Напр. Бяс, DHLPP..." />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DateAdministered" class="form-label"></label>
+                        <input asp-for="DateAdministered" type="date" class="form-control" />
+                        <span asp-validation-for="DateAdministered" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NextDueDate" class="form-label">Следваща дата</label>
+                        <input asp-for="NextDueDate" type="date" class="form-control" />
+                        <span asp-validation-for="NextDueDate" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-warning w-100 fw-bold mb-2">💾 Запази промените</button>
+                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary w-100">
+                    ⬅ Отказ
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

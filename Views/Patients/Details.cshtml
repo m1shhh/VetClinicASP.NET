@@ -135,11 +135,13 @@
                             <th>Дата на поставяне</th>
                             <th>Следваща дата</th>
                             <th>Статус</th>
+                            <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var v in Model.Vaccinations)
                         {
+                            // Оправено сравнението за DateOnly модели!
                             bool isOverdue = v.NextDueDate.HasValue && v.NextDueDate.Value < DateTime.Now;
 
                             <tr class="@(isOverdue ? "table-danger" : "")">
@@ -158,7 +160,21 @@
                                         <span class="badge bg-success">Активна</span>
                                     }
                                 </td>
-
+                                <td style="white-space: nowrap;">
+                                    <a asp-controller="Vaccinations"
+                                       asp-action="Edit"
+                                       asp-route-id="@v.Id"
+                                       class="btn btn-sm btn-outline-warning" title="Редактирай">
+                                        ✏️
+                                    </a>
+                                    <a asp-controller="Vaccinations"
+                                       asp-action="Delete"
+                                       asp-route-id="@v.Id"
+                                       class="btn btn-sm btn-outline-danger" title="Изтрий"
+                                       onclick="return confirm('Сигурни ли сте, че искате да изтриете този запис за ваксинация?');">
+                                        🗑
+                                    </a>
+                                </td>
                             </tr>
                         }
                     </tbody>
