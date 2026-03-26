@@ -1,12 +1,13 @@
-﻿using VetClinic.Models.ViewModels;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using VetClinic.Models.ViewModels;
+using VetClinicASP.NET.Models;
 
 namespace VetClinic.Services
 {
     public interface IPatientService
     {
         // Промени сигнатурата, за да приема filterType
-        List<PatientViewModel> GetAllPatients(string searchString = null, string filterType = "name", string sortOrder = "asc");
+        IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder);
         void AddPatient(PatientInputModel model);
         List<KeyValuePair<string, string>> GetOwnersList();
         PatientDetailsViewModel GetPatientDetails(int id);

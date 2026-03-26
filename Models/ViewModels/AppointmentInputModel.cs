@@ -17,5 +17,7 @@ namespace VetClinic.Models.ViewModels
         [Required(ErrorMessage = "Моля, изберете лекар")]
         [Display(Name = "Ветеринарен лекар")]
         public int VeterinarianId { get; set; }
+        public int DurationMinutes { get; set; } = 30; // 30 е по подразбиране
+        public int AppointmentId { get; set; }
     }
 }

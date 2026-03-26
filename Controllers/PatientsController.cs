@@ -19,15 +19,22 @@ namespace VetClinic.Controllers
 
         // GET: /Patients
         // GET: Patients
-        public IActionResult Index(string searchString, string filterType = "name", string sortOrder = "asc")
+        // Обновяваме метода Index
+        public IActionResult Index(string searchString, string filterType, string sortOrder)
         {
-            // Запазваме изборите, за да ги покажем обратно във View-то
+            // 1. Пазим изборите във ViewBag, за да не се ресетват падащите менюта
             ViewBag.CurrentFilter = searchString;
-            ViewBag.CurrentFilterType = filterType;
-            ViewBag.CurrentSort = sortOrder; // <--- НОВО
+            ViewBag.CurrentFilterType = string.IsNullOrEmpty(filterType) ? "name" : filterType;
+            ViewBag.CurrentSort = string.IsNullOrEmpty(sortOrder) ? "asc" : sortOrder;
 
-            // Подаваме и трите параметъра на сървиса
+            // 2. ВАЖНО: Подаваме ги на сървиса, за да си свърши работата!
+            // Ако тук пише (null, null, null), търсачката няма да работи.
             var patients = _patientService.GetAllPatients(searchString, filterType, sortOrder);
+
+            // 3. Зареждаме статистиката за картите (Трябва да имаш съответните методи)
+            ViewBag.TotalPatients = _patientService.GetAllPatients(null, null, null).Count();
+
+            // (Ако имаш логика за TotalDoctors и AppointmentsToday, остави я тук)
 
             return View(patients);
         }

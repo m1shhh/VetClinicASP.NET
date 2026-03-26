@@ -1,0 +1,165 @@
+﻿@model VetClinic.Models.ViewModels.AppointmentInputModel
+
+@{
+    ViewData["Title"] = "Редакция на преглед";
+}
+
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-warning h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">✏️ Редакция на прегледа</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="appointmentForm">
+                        <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+
+                        <input type="hidden" asp-for="AppointmentId" />
+
+                        <div class="mb-3">
+                            <label asp-for="VeterinarianId" class="form-label fw-bold">1. Избери лекар</label>
+                            <select asp-for="VeterinarianId" id="vetSelect" class="form-select" asp-items="ViewBag.Doctors">
+                                <option value="">-- Избери лекар --</option>
+                            </select>
+                            <span asp-validation-for="VeterinarianId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PatientId" class="form-label fw-bold">2. Пациент</label>
+                            <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients">
+                                <option value="">-- Избери пациент --</option>
+                            </select>
+                            <span asp-validation-for="PatientId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DateTime" class="form-label fw-bold">3. Избран час</label>
+                            <input asp-for="DateTime" id="selectedDateTime" class="form-control bg-light text-primary fw-bold" type="datetime-local" readonly />
+                            <small class="text-muted">Маркирай ново време в календара 👉</small>
+                            <span asp-validation-for="DateTime" class="text-danger small d-block mt-1"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DurationMinutes" class="form-label fw-bold">4. Продължителност</label>
+                            <select asp-for="DurationMinutes" id="appointmentDuration" class="form-select bg-light border-secondary">
+                                <option value="30">30 минути (Стандартен преглед)</option>
+                                <option value="60">1 час (Ваксинация + обстоен преглед)</option>
+                                <option value="90">1 час и 30 минути</option>
+                                <option value="120">2 часа (Хирургия / Процедура)</option>
+                                <option value="180">3 часа (Сложна операция)</option>
+                            </select>
+                            <span asp-validation-for="DurationMinutes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Reason" class="form-label fw-bold">5. Анамнеза / Причина</label>
+                            <textarea asp-for="Reason" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Reason" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg fw-bold text-dark">💾 Запази промените</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Отказ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-3" id="calendarTitle">📅 График на лекаря</h5>
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var vetSelect = document.getElementById('vetSelect');
+            var dateTimeInput = document.getElementById('selectedDateTime');
+            var durationDropdown = document.getElementById('appointmentDuration');
+            var calendarTitle = document.getElementById('calendarTitle');
+
+            // НОВО: Вземаме датата на текущия преглед, за да отворим календара на правилната седмица!
+            var initialDateStr = '@Model.DateTime.ToString("yyyy-MM-dd")';
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                initialDate: initialDateStr, // Центрираме календара около запазената дата
+                allDaySlot: false,
+                slotDuration: '00:30:00',
+                selectable: true,
+                selectOverlap: false,
+                locale: 'bg',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'timeGridWeek,timeGridDay'
+                },
+
+                select: function (info) {
+                    if (!vetSelect.value) {
+                        alert("⚠️ Моля, първо изберете лекар от падащото меню вляво!");
+                        calendar.unselect();
+                        return;
+                    }
+
+                    let startStr = info.startStr.substring(0, 16);
+                    dateTimeInput.value = startStr;
+
+                    let diffInMilliseconds = info.end - info.start;
+                    let diffInMinutes = Math.round(diffInMilliseconds / 60000);
+
+                    let optionExists = Array.from(durationDropdown.options).some(opt => opt.value == diffInMinutes);
+                    if (optionExists) {
+                        durationDropdown.value = diffInMinutes;
+                    }
+
+                    let startTime = info.start.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+                    let endTime = info.end.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+
+                    alert("✅ Изместихте часа от " + startTime + " до " + endTime + " ч. (" + diffInMinutes + " минути)");
+                }
+            });
+
+            calendar.render();
+
+            // Функция за зареждане на графика (изнесена, за да я ползваме и при първоначално зареждане)
+            function loadVetSchedule() {
+                var vetId = vetSelect.value;
+                calendar.removeAllEventSources();
+
+                if (vetId) {
+                    var vetName = vetSelect.options[vetSelect.selectedIndex].text;
+                    calendarTitle.innerText = "📅 График на " + vetName;
+                    calendar.addEventSource('/Appointments/GetBusyTimes?vetId=' + vetId);
+                } else {
+                    calendarTitle.innerText = "📅 График на лекаря (Моля, първо изберете лекар)";
+                }
+            }
+
+            // Зареждаме графика ВЕДНАГА при отваряне на страницата, защото вече имаме избран лекар!
+            if (vetSelect.value) {
+                loadVetSchedule();
+            }
+
+            // При ръчна смяна на лекаря:
+            vetSelect.addEventListener('change', loadVetSchedule);
+        });
+    </script>
+}

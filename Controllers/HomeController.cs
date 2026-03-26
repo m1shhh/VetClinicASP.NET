@@ -20,27 +20,31 @@ namespace VetClinic.Controllers
             _context = context; // Запазваме го
         }
 
-        public IActionResult Index(string searchString)
+        public IActionResult Index(string searchString, string filterType, string sortOrder)
         {
-            // --- НОВА ЧАСТ: СТАТИСТИКА ЗА DASHBOARD ---
-            // Използваме контекста директно, за да преброим записите бързо
+            // --- 1. СТАТИСТИКА ЗА DASHBOARD (Винаги брои всички записи) ---
             ViewBag.TotalPatients = _context.Patients.Count();
             ViewBag.TotalDoctors = _context.Veterinarians.Count();
 
-            // Броим прегледите за днес
             var today = DateOnly.FromDateTime(DateTime.Now);
             ViewBag.AppointmentsToday = _context.Appointments
                 .Where(a => a.AppointmentDate == today)
                 .Count();
-            // ------------------------------------------
+            // ---------------------------------------------------------------
 
-            // Старата логика за търсене
+            // --- 2. ЛОГИКА ЗА ТЪРСЕНЕ И ФИЛТРИРАНЕ НА ТАБЛИЦАТА ---
+
+            // Пазим изборите, за да останат визуализирани в падащите менюта и полето за търсене
             ViewBag.CurrentFilter = searchString;
-            var patients = _patientService.GetAllPatients(searchString);
+            ViewBag.CurrentFilterType = string.IsNullOrEmpty(filterType) ? "name" : filterType;
+            ViewBag.CurrentSort = string.IsNullOrEmpty(sortOrder) ? "asc" : sortOrder;
+
+            // Взимаме филтрирания списък (вече подаваме реалните променливи, а не null!)
+            var patients = _patientService.GetAllPatients(searchString, filterType, sortOrder);
+            // ---------------------------------------------------------------
 
             return View(patients);
         }
-
         public IActionResult Privacy()
         {
             return View();

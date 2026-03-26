@@ -1,5 +1,5 @@
 ﻿@using VetClinic.Models.ViewModels
-@model List<PatientViewModel>
+@model IEnumerable<VetClinicASP.NET.Models.Patient>
 
 @{
     ViewData["Title"] = "Списък с пациенти";
@@ -138,11 +138,11 @@
                                 </td>
                                 <td>@patient.Breed</td>
                                 <td>@patient.Age г.</td>
-                                <td>@patient.OwnerName</td>
+                                <td>@(patient.Owner?.FullName ?? "Няма данни")</td>
                                 <td class="text-end">
                                     <a asp-controller="Patients"
                                        asp-action="Details"
-                                       asp-route-id="@patient.Id"
+                                       asp-route-id="@patient.PatientId"
                                        class="btn btn-sm btn-info text-white"
                                        title="Виж досие">
                                         📂
@@ -150,7 +150,7 @@
 
                                     <a asp-controller="Patients"
                                        asp-action="Edit"
-                                       asp-route-id="@patient.Id"
+                                       asp-route-id="@patient.PatientId"
                                        class="btn btn-sm btn-warning"
                                        title="Редактирай">
                                         ✏️
@@ -158,7 +158,7 @@
 
                                     <a asp-controller="Patients"
                                        asp-action="Delete"
-                                       asp-route-id="@patient.Id"
+                                       asp-route-id="@patient.PatientId"
                                        class="btn btn-sm btn-danger"
                                        title="Изтрий">
                                         🗑

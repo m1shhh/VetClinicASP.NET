@@ -21,5 +21,7 @@ public partial class Appointment
 
     public virtual Veterinarian Vet { get; set; } = null!;
 
+    public int DurationMinutes { get; set; } = 30;
+
     // ИЗТРИХМЕ public DateTime DateTime... ОТ ТУК
 }

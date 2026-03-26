@@ -15,51 +15,56 @@ namespace VetClinic.Services
         }
 
         // 1. Списък с пациенти + Търсене
-        public List<PatientViewModel> GetAllPatients(string searchString = null, string filterType = "name")
+        public IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder)
         {
-            var query = _context.Patients
-                .Include(p => p.Owner)
-                .AsQueryable();
+            // 1. Базова заявка с включен собственик
+            var query = _context.Patients.Include(p => p.Owner).AsQueryable();
 
+            // 2. ФИЛТРИРАНЕ (Работи само ако има въведен текст)
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
-
-                // Прилагаме различна логика в зависимост от избрания филтър
                 switch (filterType)
                 {
                     case "owner":
                         query = query.Where(p => p.Owner.FullName.ToLower().Contains(searchString));
                         break;
                     case "breed":
+                        // Внимаваме, ако породата е null (някои животни може да нямат въведена)
                         query = query.Where(p => p.Breed != null && p.Breed.ToLower().Contains(searchString));
                         break;
                     case "age":
-                        // Трябва да се уверим, че въведеното е число, преди да търсим
-                        if (int.TryParse(searchString, out int searchAge))
-                        {
-                            query = query.Where(p => p.Age == searchAge);
-                        }
+                        if (int.TryParse(searchString, out int age))
+                            query = query.Where(p => p.Age == age);
                         break;
                     case "name":
                     default:
-                        // Това е по подразбиране
                         query = query.Where(p => p.Name.ToLower().Contains(searchString));
                         break;
                 }
             }
 
-            // Мапваме резултата към ViewModel
-            // Мапваме резултата към ViewModel
-            return query.Select(p => new PatientViewModel
+            // 3. СОРТИРАНЕ (Работи винаги, дори и без текст за търсене)
+            bool isDesc = sortOrder == "desc";
+
+            switch (filterType)
             {
-                Id = p.PatientId,
-                Name = p.Name,
-                Species = p.Species,
-                Breed = p.Breed,
-                Age = p.Age ?? 0, // <--- ТУК Е ФИКСЪТ: Добавяме ?? 0
-                OwnerName = p.Owner != null ? p.Owner.FullName : "Няма данни"
-            }).ToList();
+                case "owner":
+                    query = isDesc ? query.OrderByDescending(p => p.Owner.FullName) : query.OrderBy(p => p.Owner.FullName);
+                    break;
+                case "breed":
+                    query = isDesc ? query.OrderByDescending(p => p.Breed) : query.OrderBy(p => p.Breed);
+                    break;
+                case "age":
+                    query = isDesc ? query.OrderByDescending(p => p.Age) : query.OrderBy(p => p.Age);
+                    break;
+                case "name":
+                default:
+                    query = isDesc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name);
+                    break;
+            }
+
+            return query.ToList();
         }
         public PatientDetailsViewModel GetPatientDetails(int id)
         {
@@ -129,70 +134,6 @@ namespace VetClinic.Services
         }
 
         // 4. Детайли (Досие)
-        public List<PatientViewModel> GetAllPatients(string searchString = null, string filterType = "name", string sortOrder = "asc")
-        {
-            var query = _context.Patients
-                .Include(p => p.Owner)
-                .AsQueryable();
-
-            // 1. ФИЛТРИРАНЕ (Търсене)
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                searchString = searchString.ToLower();
-
-                switch (filterType)
-                {
-                    case "owner":
-                        query = query.Where(p => p.Owner.FullName.ToLower().Contains(searchString));
-                        break;
-                    case "breed":
-                        query = query.Where(p => p.Breed != null && p.Breed.ToLower().Contains(searchString));
-                        break;
-                    case "age":
-                        if (int.TryParse(searchString, out int searchAge))
-                        {
-                            query = query.Where(p => p.Age == searchAge);
-                        }
-                        break;
-                    case "name":
-                    default:
-                        query = query.Where(p => p.Name.ToLower().Contains(searchString));
-                        break;
-                }
-            }
-
-            // 2. СОРТИРАНЕ (Възходящо или Низходящо)
-            bool isDesc = sortOrder == "desc";
-
-            switch (filterType)
-            {
-                case "owner":
-                    query = isDesc ? query.OrderByDescending(p => p.Owner.FullName) : query.OrderBy(p => p.Owner.FullName);
-                    break;
-                case "breed":
-                    query = isDesc ? query.OrderByDescending(p => p.Breed) : query.OrderBy(p => p.Breed);
-                    break;
-                case "age":
-                    query = isDesc ? query.OrderByDescending(p => p.Age) : query.OrderBy(p => p.Age);
-                    break;
-                case "name":
-                default:
-                    // По подразбиране сортираме по името на животното
-                    query = isDesc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name);
-                    break;
-            }
-
-            // 3. МАПВАНЕ КЪМ VIEWMODEL
-            return query.Select(p => new PatientViewModel
-            {
-                Id = p.PatientId,
-                Name = p.Name,
-                Species = p.Species,
-                Breed = p.Breed,
-                Age = p.Age ?? 0,
-                OwnerName = p.Owner != null ? p.Owner.FullName : "Няма данни"
-            }).ToList();
-        }
 
         // 5. Взимане за Редакция (GET)
         public PatientInputModel GetPatientForEdit(int id)

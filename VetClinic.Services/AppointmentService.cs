@@ -48,23 +48,20 @@ namespace VetClinic.Services
 
         public void AddAppointment(AppointmentInputModel model)
         {
-            // 1. Създаваме реалния обект за базата данни
             var appointment = new Appointment
             {
                 PatientId = model.PatientId,
                 VetId = model.VeterinarianId,
                 Reason = model.Reason,
 
-                // 2. РАЗДЕЛЯНЕ НА DATETIME: 
-                // Ако твоята база ползва DateOnly и TimeOnly (net6.0+), правим това:
+                // Мапване на датата и часа
                 AppointmentDate = DateOnly.FromDateTime(model.DateTime),
-                AppointmentTime = TimeOnly.FromDateTime(model.DateTime)
+                AppointmentTime = TimeOnly.FromDateTime(model.DateTime),
 
-                // ЗАБЕЛЕЖКА: Ако твоята база ползва стария DateTime формат за тези полета, 
-                // просто използвай: AppointmentDate = model.DateTime;
+                // НОВО: Вземаме маркираните минути от календара и ги пращаме в базата!
+                DurationMinutes = model.DurationMinutes
             };
 
-            // 3. Добавяне и запис
             _context.Appointments.Add(appointment);
             _context.SaveChanges();
         }
@@ -82,6 +79,40 @@ namespace VetClinic.Services
                 _context.SaveChanges();
             }
         }
+        // 1. Взимаме записа и го превръщаме във ViewModel за формата
+        public AppointmentInputModel GetAppointmentForEdit(int id)
+        {
+            var appointment = _context.Appointments.Find(id);
+            if (appointment == null) return null;
 
+            return new AppointmentInputModel
+            {
+                AppointmentId = appointment.AppointmentId,
+                PatientId = appointment.PatientId,
+                VeterinarianId = appointment.VetId,
+                Reason = appointment.Reason,
+                DurationMinutes = appointment.DurationMinutes,
+                // Сглобяваме DateOnly и TimeOnly обратно в пълен DateTime
+                DateTime = appointment.AppointmentDate.ToDateTime(appointment.AppointmentTime)
+            };
+        }
+
+        // 2. Записваме промените върху съществуващия запис
+        public void UpdateAppointment(AppointmentInputModel model)
+        {
+            var appointment = _context.Appointments.Find(model.AppointmentId);
+
+            if (appointment != null)
+            {
+                appointment.PatientId = model.PatientId;
+                appointment.VetId = model.VeterinarianId;
+                appointment.Reason = model.Reason;
+                appointment.DurationMinutes = model.DurationMinutes;
+                appointment.AppointmentDate = DateOnly.FromDateTime(model.DateTime);
+                appointment.AppointmentTime = TimeOnly.FromDateTime(model.DateTime);
+
+                _context.SaveChanges();
+            }
+        }
     }
 }

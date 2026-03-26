@@ -15,5 +15,7 @@ namespace VetClinic.Services
         void AddAppointment(AppointmentInputModel model);
         void DeleteAppointment(int id);
         Appointment GetAppointmentById(int id);
+        AppointmentInputModel GetAppointmentForEdit(int id);
+        void UpdateAppointment(AppointmentInputModel model);
     }
 }

@@ -51,7 +51,10 @@
                             <tr class="@(isPast ? "text-muted bg-light" : "")">
                                 <td>
                                     <div class="fw-bold">@item.AppointmentDate.ToString("dd.MM.yyyy")</div>
-                                    <small>@item.AppointmentTime.ToString("HH:mm") ч.</small>
+
+                                    <small class="badge bg-secondary">
+                                        @item.AppointmentTime.ToString("HH:mm") - @item.AppointmentTime.AddMinutes(item.DurationMinutes).ToString("HH:mm") ч.
+                                    </small>
                                 </td>
                                 <td>
                                     <a asp-controller="Patients" asp-action="Details" asp-route-id="@item.PatientId" class="text-decoration-none fw-bold">
@@ -84,6 +87,12 @@
                                 </td>
 
                                 <td class="text-end">
+                                    <a asp-action="Edit" asp-route-id="@item.AppointmentId"
+                                       class="btn btn-sm btn-warning text-dark"
+                                       title="Редактирай">
+                                        ✏️
+                                    </a>
+
                                     <a asp-action="Delete" asp-route-id="@item.AppointmentId"
                                        class="btn btn-sm btn-danger"
                                        title="Изтрий">
