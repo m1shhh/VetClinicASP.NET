@@ -31,13 +31,8 @@ namespace VetClinic.Controllers
 
             _vaccinationService.AddVaccination(model);
 
-            // Връща ни обратно в досието на пациента
             return RedirectToAction("Details", "Patients", new { id = model.PatientId });
         }
-        // ---------------------------------------------------------
-        // НАЧАЛО НА EDIT МЕТОДИТЕ
-        // ---------------------------------------------------------
-
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -48,7 +43,6 @@ namespace VetClinic.Controllers
                 return NotFound();
             }
 
-            // This line tells MVC to look for Views/Vaccinations/Edit.cshtml
             return View(model);
         }
 
@@ -60,22 +54,16 @@ namespace VetClinic.Controllers
                 return View(model);
             }
 
-            // Записваме промените чрез сървиса
             _vaccinationService.UpdateVaccination(model);
 
-            // Връщаме се обратно в досието на пациента
             return RedirectToAction("Details", "Patients", new { id = model.PatientId });
         }
 
-        // ---------------------------------------------------------
-        // НАЧАЛО НА DELETE МЕТОДА
-        // ---------------------------------------------------------
-
-        // Използваме HttpGet, защото бутонът ни в HTML е <a> таг (линк)
+        // Изтриване на ваксинации
         [HttpGet]
         public IActionResult Delete(int id)
         {
-            // Трябва ни PatientId ПРЕДИ да изтрием ваксината, за да знаем къде да се върнем
+            // нужен е PatientId ПРЕДИ да се изтрие ваксината, за да знаем къде да се върнем
             int patientId = _vaccinationService.GetPatientIdByVaccination(id);
 
             if (patientId == 0)
@@ -83,10 +71,9 @@ namespace VetClinic.Controllers
                 return NotFound();
             }
 
-            // Трием ваксината
             _vaccinationService.DeleteVaccination(id);
 
-            // Връщаме се в досието на животното
+            // обратно в досието на животното
             return RedirectToAction("Details", "Patients", new { id = patientId });
         }
     }

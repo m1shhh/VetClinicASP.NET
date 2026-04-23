@@ -13,7 +13,7 @@ namespace VetClinic.Services
             _context = context;
         }
 
-        // ПОПРАВКА 1: Промени на IEnumerable<Appointment>
+        // взима всички срещи или часове
         public IEnumerable<Appointment> GetAllAppointments(int? vetId)
         {
             var query = _context.Appointments
@@ -29,7 +29,6 @@ namespace VetClinic.Services
             return query.OrderByDescending(a => a.AppointmentDate).ToList();
         }
 
-        // ПОПРАВКА 2: Промени на IEnumerable<KeyValuePair<int, string>>
         public IEnumerable<KeyValuePair<int, string>> GetDoctorsList()
         {
             return _context.Veterinarians
@@ -37,7 +36,6 @@ namespace VetClinic.Services
                 .ToList();
         }
 
-        // Останалите методи...
         public Appointment GetAppointmentById(int id)
         {
             return _context.Appointments
@@ -54,11 +52,9 @@ namespace VetClinic.Services
                 VetId = model.VeterinarianId,
                 Reason = model.Reason,
 
-                // Мапване на датата и часа
                 AppointmentDate = DateOnly.FromDateTime(model.DateTime),
                 AppointmentTime = TimeOnly.FromDateTime(model.DateTime),
 
-                // НОВО: Вземаме маркираните минути от календара и ги пращаме в базата!
                 DurationMinutes = model.DurationMinutes
             };
 
@@ -67,19 +63,18 @@ namespace VetClinic.Services
         }
         public void DeleteAppointment(int id)
         {
-            // 1. Търсим записа в базата данни по неговото ID
+            // Търси се записа в базата данни по неговото ID
             var appointment = _context.Appointments.Find(id);
 
-            // 2. Проверяваме дали записът съществува, преди да се опитаме да го изтрием
+            // Проверява се дали записът съществува, преди да се опитаме да го изтрием
             if (appointment != null)
             {
                 _context.Appointments.Remove(appointment);
 
-                // 3. Запазваме промените в базата данни
                 _context.SaveChanges();
             }
         }
-        // 1. Взимаме записа и го превръщаме във ViewModel за формата
+        // Записват се данните за срещата, която ще се редактира, в AppointmentInputModel
         public AppointmentInputModel GetAppointmentForEdit(int id)
         {
             var appointment = _context.Appointments.Find(id);
@@ -97,7 +92,7 @@ namespace VetClinic.Services
             };
         }
 
-        // 2. Записваме промените върху съществуващия запис
+        // Записване на промените върху съществуващия запис
         public void UpdateAppointment(AppointmentInputModel model)
         {
             var appointment = _context.Appointments.Find(model.AppointmentId);

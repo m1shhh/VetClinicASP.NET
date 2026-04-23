@@ -5,7 +5,7 @@ namespace VetClinic.Models.ViewModels
 {
     public class VaccinationInputModel
     {
-        // ДОБАВЕНО: Задължително за Edit метода, за да знаем коя ваксина редактираме!
+        // Задължително за Edit метода, за да се знае коя ваксина се редактира и на кой пациент принадлежи
         public int VaccinationId { get; set; }
 
         public int PatientId { get; set; }

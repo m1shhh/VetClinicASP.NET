@@ -4,7 +4,7 @@ namespace VetClinic.Models.ViewModels
 {
     public class AppointmentInputModel
     {
-        public int PatientId { get; set; } // Скрито поле, за да знаем кой е пациентът
+        public int PatientId { get; set; } 
 
         [Required]
         [Display(Name = "Дата и час")]

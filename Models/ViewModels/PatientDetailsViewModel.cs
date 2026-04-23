@@ -13,25 +13,25 @@
         public string? OwnerPhone { get; set; }
         public string? OwnerAddress { get; set; }
 
-        // НОВО: Списък с история на прегледите
+        // Списък с история на прегледите
         public List<VisitViewModel> Visits { get; set; } = new List<VisitViewModel>();
 
-        // НОВО: Списък с ваксини
+        // Списък с ваксини
         public List<VaccinationViewModel> Vaccinations { get; set; } = new List<VaccinationViewModel>();
     }
     public class VaccinationViewModel
     {
-        public int Id { get; set; } // <--- ДОБАВЕНО: За да работят бутоните Редакция/Изтриване
+        public int Id { get; set; } 
 
         public DateTime DateAdministered { get; set; }
         public string VaccineName { get; set; } = null!;
         public DateTime? NextDueDate { get; set; }
     }
 
-    // НОВО: Клас за един преглед
+    // Клас за един преглед
     public class VisitViewModel
     {
-        public int RecordId { get; set; } // <--- НОВО: За да знаем кой картон редактираме
+        public int RecordId { get; set; } 
 
         public DateTime Date { get; set; }
         public string Reason { get; set; }

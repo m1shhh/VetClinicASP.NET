@@ -9,25 +9,22 @@ namespace VetClinic.Controllers
     {
         private readonly IAppointmentService _appointmentService;
         private readonly IPatientService _patientService;
-
-        // 1. НОВО: Добавяме поле за VetService
         private readonly IVeterinarianService _vetService;
 
-        // 2. Обновяваме конструктора да приема и трите сервиза
+        // Обновявен конструктора да приема и трите сервиза
         public AppointmentsController(
             IAppointmentService appointmentService,
             IPatientService patientService,
-            IVeterinarianService vetService) // <--- Тук добавихме vetService
+            IVeterinarianService vetService) 
         {
             _appointmentService = appointmentService;
             _patientService = patientService;
-            _vetService = vetService; // <--- Тук го присвояваме
+            _vetService = vetService; 
         }
 
-        // 3. INDEX: Списък с филтър
+        // INDEX: Списък с филтър
         public IActionResult Index(int? vetId)
         {
-            // Тук вече _vetService съществува и няма да гърми!
             if (vetId.HasValue)
             {
                 var vet = _vetService.GetVeterinarianById(vetId.Value);
@@ -44,8 +41,7 @@ namespace VetClinic.Controllers
             return View(appointments);
         }
 
-        // 4. GET: Създаване
-        // GET: Отваря празната форма
+        // GET: Създаване и Отваря празната форма
         [HttpGet]
         public IActionResult Create(int? patientId)
         {
@@ -59,7 +55,7 @@ namespace VetClinic.Controllers
                 model.PatientId = patientId.Value;
             }
 
-            // ЗАДЪЛЖИТЕЛНО: Зареждаме падащите менюта, преди да покажем страницата
+            // ЗАДЪЛЖИТЕЛНО: Зареждаме падащите менюта, преди да покажем страницата. Работи не пипай
             LoadDropdowns();
             return View(model);
         }
@@ -70,8 +66,7 @@ namespace VetClinic.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // ПОПРАВКА: Ако има грешка, ТРЯБВА да заредим менютата отново,
-                // иначе View-то ще гръмне с NullReferenceException!
+
                 LoadDropdowns();
 
                 return View(model);
@@ -81,13 +76,11 @@ namespace VetClinic.Controllers
             return RedirectToAction("Index");
         }
 
-        // 6. DELETE: Изтриване
-        // 6. GET: Показва страницата за потвърждение за изтриване
+        // 6. DELETE: Изтриване и GET: Показва страницата за потвърждение за изтриване
         [HttpGet]
         public IActionResult Delete(int id)
         {
             // Намираме записа чрез сервиза, за да покажем детайлите на екрана
-            // Увери се, че твоето View ползва модела, който връщаш тук
             var appointment = _appointmentService.GetAppointmentById(id);
 
             if (appointment == null)
@@ -98,7 +91,7 @@ namespace VetClinic.Controllers
             return View(appointment);
         }
 
-        // 7. POST: Извършва реалното изтриване след натискане на червения бутон
+        // POST: Извършва реалното изтриване след натискане на червения бутон
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
@@ -115,27 +108,22 @@ namespace VetClinic.Controllers
 
             var patients = _patientService.GetAllPatients(null, null, null);
 
-            // ПОПРАВКА: Сменихме "Id" на "PatientId", за да съвпада с базата данни!
             ViewBag.Patients = new SelectList(patients, "PatientId", "Name");
         }
-        // Добави това в AppointmentsController.cs
-        // Добави този метод в AppointmentsController.cs
         [HttpGet]
         public IActionResult GetBusyTimes(int vetId)
         {
             var appointments = _appointmentService.GetAllAppointments(vetId);
 
             var busySlots = appointments.Select(a => {
-                // ВАЖНО: Създаваме истински DateTime обекти в C#, за да избегнем грешки с форматирането
+                // ВАЖНО: Създал съм истински DateTime обекти за да избегнем грешки с форматирането
                 DateTime startDateTime = a.AppointmentDate.ToDateTime(a.AppointmentTime);
 
-                // Добавяме минутите продължителност към началния час
                 DateTime endDateTime = startDateTime.AddMinutes(a.DurationMinutes);
 
                 return new
                 {
                     title = "Заето",
-                    // Форматираме ги гарантирано правилно (ISO 8601)
                     start = startDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                     end = endDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                     color = "#dc3545",

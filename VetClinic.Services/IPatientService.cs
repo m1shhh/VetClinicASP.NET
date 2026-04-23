@@ -6,7 +6,6 @@ namespace VetClinic.Services
 {
     public interface IPatientService
     {
-        // Промени сигнатурата, за да приема filterType
         IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder);
         void AddPatient(PatientInputModel model);
         List<KeyValuePair<string, string>> GetOwnersList();
@@ -16,7 +15,7 @@ namespace VetClinic.Services
         PatientInputModel GetPatientForEdit(int id);
         void UpdatePatient(PatientInputModel model);
 
-        //delete method
+        //delete метода
         void DeletePatient(int id);
     }
 }

@@ -4,9 +4,9 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Species { get; set; } = null!; // Куче, Котка...
-        public string Breed { get; set; } // Порода
+        public string Species { get; set; } = null!;
+        public string Breed { get; set; }
         public int Age { get; set; }
-        public string OwnerName { get; set; } = null!; // Тук ще вземем името от другата таблица
+        public string OwnerName { get; set; } = null!; // Използва се името от другата таблица
     }
 }

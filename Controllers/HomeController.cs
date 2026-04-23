@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using VetClinic.Models.ViewModels;
 using VetClinic.Services;
-using VetClinicASP.NET.Models; // За контекста и моделите
+using VetClinicASP.NET.Models; 
 
 namespace VetClinic.Controllers
 {
@@ -10,9 +10,9 @@ namespace VetClinic.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IPatientService _patientService;
-        private readonly VetClinicContext _context; // 1. НОВО: Добавяме контекста за статистиката
+        private readonly VetClinicContext _context; 
 
-        // 2. Обновяваме конструктора, за да приема и Context
+        // Обновявен конструктор , за да приема и Context
         public HomeController(ILogger<HomeController> logger, IPatientService patientService, VetClinicContext context)
         {
             _logger = logger;
@@ -22,7 +22,7 @@ namespace VetClinic.Controllers
 
         public IActionResult Index(string searchString, string filterType, string sortOrder)
         {
-            // --- 1. СТАТИСТИКА ЗА DASHBOARD (Винаги брои всички записи) ---
+            // --- СТАТИСТИКА ЗА DASHBOARD (Винаги брои всички записи) ---
             ViewBag.TotalPatients = _context.Patients.Count();
             ViewBag.TotalDoctors = _context.Veterinarians.Count();
 
@@ -56,7 +56,7 @@ namespace VetClinic.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // --- МЕТОДИ ЗА СЪЗДАВАНЕ НА ПАЦИЕНТ (Запазваме ги както са си) ---
+        // --- МЕТОДИ ЗА СЪЗДАВАНЕ НА ПАЦИЕНТ ---
 
         [HttpGet]
         public IActionResult Create()
@@ -64,7 +64,7 @@ namespace VetClinic.Controllers
             var owners = _patientService.GetOwnersList();
             ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
 
-            // ПРОМЯНА: Указваме пълния път до файла
+            // ПРОМЯНА: Указван пълния път до файла
             return View("~/Views/Patients/Create.cshtml");
         }
 
@@ -76,7 +76,7 @@ namespace VetClinic.Controllers
                 var owners = _patientService.GetOwnersList();
                 ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
 
-                // ПРОМЯНА: Връщаме правилния файл + модела с грешките
+                // ПРОМЯНА: Връщам правилния файл + модела с грешките
                 return View("~/Views/Patients/Create.cshtml", model);
             }
 

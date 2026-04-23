@@ -14,13 +14,13 @@ namespace VetClinic.Services
             _context = context;
         }
 
-        // 1. Списък с пациенти + Търсене
+        // Списък с пациенти + Търсене
         public IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder)
         {
-            // 1. Базова заявка с включен собственик
+            // Базова заявка с включен собственик
             var query = _context.Patients.Include(p => p.Owner).AsQueryable();
 
-            // 2. ФИЛТРИРАНЕ (Работи само ако има въведен текст)
+            // ФИЛТРИРАНЕ (Работи само ако има въведен текст)
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
@@ -30,7 +30,6 @@ namespace VetClinic.Services
                         query = query.Where(p => p.Owner.FullName.ToLower().Contains(searchString));
                         break;
                     case "breed":
-                        // Внимаваме, ако породата е null (някои животни може да нямат въведена)
                         query = query.Where(p => p.Breed != null && p.Breed.ToLower().Contains(searchString));
                         break;
                     case "age":
@@ -44,7 +43,7 @@ namespace VetClinic.Services
                 }
             }
 
-            // 3. СОРТИРАНЕ (Работи винаги, дори и без текст за търсене)
+            // СОРТИРАНЕ (Работи винаги, дори и без текст за търсене)
             bool isDesc = sortOrder == "desc";
 
             switch (filterType)
@@ -107,7 +106,7 @@ namespace VetClinic.Services
 
             return patient;
         }
-        // 2. Добавяне
+        // Добавяне
         public void AddPatient(PatientInputModel model)
         {
             var patient = new Patient
@@ -123,7 +122,7 @@ namespace VetClinic.Services
             _context.SaveChanges();
         }
 
-        // 3. Списък собственици
+        // Списък собственици
         public List<KeyValuePair<string, string>> GetOwnersList()
         {
             return _context.Owners
@@ -132,10 +131,7 @@ namespace VetClinic.Services
                     x.FullName))
                 .ToList();
         }
-
-        // 4. Детайли (Досие)
-
-        // 5. Взимане за Редакция (GET)
+        // Взимане за Редакция (GET)
         public PatientInputModel GetPatientForEdit(int id)
         {
             var patient = _context.Patients.Find(id);
@@ -152,7 +148,7 @@ namespace VetClinic.Services
             };
         }
 
-        // 6. Запазване на Редакция (POST)
+        // Запазване на Редакция (POST)
         public void UpdatePatient(PatientInputModel model)
         {
             var patient = _context.Patients.Find(model.Id);
@@ -166,36 +162,34 @@ namespace VetClinic.Services
                 _context.SaveChanges();
             }
         }
-        // 7. Изтриване на пациент
+        // Изтриване на пациент
         public void DeletePatient(int id)
         {
             var patient = _context.Patients.Find(id);
 
             if (patient != null)
             {
-                // 1. Изтриваме Прегледите (Appointments)
+                // Изтриване на Прегледите (Appointments)
                 var appointments = _context.Appointments
                     .Where(a => a.PatientId == id)
                     .ToList();
                 _context.Appointments.RemoveRange(appointments);
 
-                // 2. Изтриваме Ваксините (Vaccinations)
+                // Изтриване на ваксините (Vaccinations)
                 var vaccinations = _context.Vaccinations
                     .Where(v => v.PatientId == id)
                     .ToList();
                 _context.Vaccinations.RemoveRange(vaccinations);
 
-                // 3. НОВО: Изтриваме Медицинските записи (MedicalRecords)
-                // Трябва да изчистим и тях, иначе базата няма да даде да изтрием пациента
+                // Изтриване на Медицинските записи (MedicalRecords)
                 var records = _context.MedicalRecords
                     .Where(r => r.PatientId == id)
                     .ToList();
                 _context.MedicalRecords.RemoveRange(records);
 
-                // 4. Най-накрая трием самия пациент
+                // изтриване на на пациента
                 _context.Patients.Remove(patient);
 
-                // 5. Запазваме всичко
                 _context.SaveChanges();
             }
         }

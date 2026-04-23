@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using VetClinic.Models.ViewModels;
-using VetClinic.Services; // За да виждаме интерфейса
+using VetClinic.Services; 
 using VetClinicASP.NET.Models;
 
 namespace VetClinic.Controllers
 {
     public class PatientsController : Controller
     {
-        // Тук декларираме, че имаме нужда от нашата услуга
         private readonly IPatientService _patientService;
 
         // Конструктор: ASP.NET автоматично ще подаде услугата тук
@@ -17,56 +16,53 @@ namespace VetClinic.Controllers
             _patientService = patientService;
         }
 
-        // GET: /Patients
         // GET: Patients
         // Обновяваме метода Index
         public IActionResult Index(string searchString, string filterType, string sortOrder)
         {
-            // 1. Пазим изборите във ViewBag, за да не се ресетват падащите менюта
+            // Пази изборите във ViewBag, за да не се нулирът падащите менюта
             ViewBag.CurrentFilter = searchString;
             ViewBag.CurrentFilterType = string.IsNullOrEmpty(filterType) ? "name" : filterType;
             ViewBag.CurrentSort = string.IsNullOrEmpty(sortOrder) ? "asc" : sortOrder;
 
-            // 2. ВАЖНО: Подаваме ги на сървиса, за да си свърши работата!
+            // ВАЖНО Подават се на сървиса, за да си свърши работата!
             // Ако тук пише (null, null, null), търсачката няма да работи.
             var patients = _patientService.GetAllPatients(searchString, filterType, sortOrder);
 
-            // 3. Зареждаме статистиката за картите (Трябва да имаш съответните методи)
+            // Зареждаме статистиката за картите 
             ViewBag.TotalPatients = _patientService.GetAllPatients(null, null, null).Count();
-
-            // (Ако имаш логика за TotalDoctors и AppointmentsToday, остави я тук)
 
             return View(patients);
         }
-        // 1. GET: Отваря празната форма
+        // Формата за създаване на нов пациент
         [HttpGet]
         public IActionResult Create()
         {
-            // Зареждаме собствениците за падащото меню
+            // Зареждане на собствениците за падащото меню
             var owners = _patientService.GetOwnersList();
 
-            // Изпращаме ги към View-то чрез ViewBag
+            // Изпращат се към View-то чрез ViewBag
             ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
 
             return View();
         }
 
-        // 2. POST: Приема данните и записва
+        // POST: Приема данните и записва
         [HttpPost]
         public IActionResult Create(PatientInputModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Ако има грешка, връщаме потребителя обратно във формата
+                // Ако има грешка, връща се потребителя обратно във формата
                 var owners = _patientService.GetOwnersList();
                 ViewBag.Owners = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(owners, "Key", "Value");
                 return View(model);
             }
 
-            // Записваме
+            // Запис
             _patientService.AddPatient(model);
 
-            // Връщаме се към списъка
+            // Връщане към списъка
             return RedirectToAction("Index");
         }
         public IActionResult Details(int id)
@@ -80,15 +76,11 @@ namespace VetClinic.Controllers
 
             return View(patient);
         }
-        // ---------------------------------------------------------
-        // НАЧАЛО НА EDIT МЕТОДИТЕ (Сложи ги в PatientsController.cs)
-        // ---------------------------------------------------------
 
         // GET: Отваря формата за редакция
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            // Използваме новия метод от сървиса
             var model = _patientService.GetPatientForEdit(id);
 
             if (model == null)
@@ -96,7 +88,7 @@ namespace VetClinic.Controllers
                 return NotFound(); // Ако няма такъв пациент -> 404
             }
 
-            // Зареждаме собствениците за падащото меню
+            // Зареждане на собствениците за падащото меню
             var owners = _patientService.GetOwnersList();
             ViewBag.Owners = new SelectList(owners, "Key", "Value", model.OwnerId);
 
@@ -116,18 +108,13 @@ namespace VetClinic.Controllers
 
             _patientService.UpdatePatient(model);
 
-            // ВАРИАНТ 1: Връща те в Досието на животното (препоръчително след редакция)
             return RedirectToAction("Details", new { id = model.Id });
         }
-        // ---------------------------------------------------------
-        // КРАЙ НА EDIT МЕТОДИТЕ
-        // ---------------------------------------------------------
-
         // GET: Показва страница за потвърждение
         [HttpGet]
         public IActionResult Delete(int id)
         {
-            // Използваме готовия метод за детайли, за да покажем кой трием
+
             var patient = _patientService.GetPatientDetails(id);
 
             if (patient == null)

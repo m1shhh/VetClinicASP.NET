@@ -18,11 +18,9 @@ namespace VetClinic.Services
             var vaccine = new Vaccination
             {
                 PatientId = model.PatientId,
-
-                // ВАЖНО: Тук трябва да съвпада с името в PatientService (VaccineName)
                 VaccineName = model.Name,
 
-                // Конвертиране ОТ формата (DateTime) КЪМ базата (DateOnly)
+                // Конвертор от формата (DateTime) КЪМ базата (DateOnly)
                 DateAdministered = DateOnly.FromDateTime(model.DateAdministered),
 
                 NextDueDate = model.NextDueDate.HasValue
@@ -40,7 +38,7 @@ namespace VetClinic.Services
 
             return new VaccinationInputModel
             {
-                VaccinationId = vaccine.VaccinationId, // Предполагам, че вече добави това поле
+                VaccinationId = vaccine.VaccinationId, 
                 PatientId = vaccine.PatientId,
                 Name = vaccine.VaccineName,
                 DateAdministered = vaccine.DateAdministered.ToDateTime(TimeOnly.MinValue),

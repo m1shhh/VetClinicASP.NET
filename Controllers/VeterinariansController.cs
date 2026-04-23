@@ -14,21 +14,21 @@ namespace VetClinic.Controllers
             _vetService = vetService;
         }
 
-        // 1. Списък с лекари
+        // Списък с лекари
         public IActionResult Index()
         {
             var vets = _vetService.GetAllVeterinarians();
             return View(vets);
         }
 
-        // 2. Страница за добавяне (GET)
+        //  Страница за добавяне 
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // 3. Запазване на новия лекар (POST)
+        // 3. Запазване на новия лекар 
         [HttpPost]
         public IActionResult Create(Veterinarian vet)
         {
@@ -40,7 +40,7 @@ namespace VetClinic.Controllers
             return View(vet);
         }
 
-        // 1. Зареждане на данните за редакция (GET)
+        // Зареждане на данните за редакция 
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -52,7 +52,7 @@ namespace VetClinic.Controllers
             return View(vet);
         }
 
-        // 2. Запазване на промените (POST)
+        // Запазване на промените 
         [HttpPost]
         public IActionResult Edit(Veterinarian vet)
         {
@@ -63,14 +63,12 @@ namespace VetClinic.Controllers
             }
             return View(vet);
         }
-        // Добави този метод в контролера:
         [HttpGet]
         [HttpGet]
-        // 1. GET: Зарежда страницата за потвърждение (Delete.cshtml)
+        // Зареждане на страницата за потвърждение 
         [HttpGet]
         public IActionResult Delete(int id)
         {
-            // Оправено: Използваме точното име от твоя сървис
             var vet = _vetService.GetVeterinarianById(id);
 
             if (vet == null) return NotFound();
@@ -78,11 +76,10 @@ namespace VetClinic.Controllers
             return View(vet);
         }
 
-        // 2. POST: Извършва реалното изтриване
+        // POST: Извършва реалното изтриване
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int VetId)
         {
-            // Оправено: Използваме точното име от твоя сървис
             _vetService.DeleteVeterinarian(VetId);
             return RedirectToAction("Index");
         }

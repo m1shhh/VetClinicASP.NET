@@ -15,24 +15,24 @@ namespace VetClinic.Controllers
             _context = context;
         }
 
-        // 1. GET: Зарежда формата за нов преглед
+        // GET: Зарежда формата за нов преглед
         [HttpGet]
         public IActionResult Create(int patientId)
         {
-            // Проверяваме дали пациентът съществува
+            // Проверка дали пациентът съществува
             var patient = _context.Patients.Find(patientId);
             if (patient == null)
             {
                 return NotFound("Пациентът не е намерен.");
             }
 
-            // Зареждаме списък с лекари за падащото меню
+            // Зареждане на списък с лекари за падащото меню
             ViewBag.Vets = new SelectList(_context.Veterinarians, "VetId", "FullName");
 
-            // Записваме името на пациента, за да го покажем в заглавието на формата
+            // Записване на името на пациента, за да се покаже в заглавието на формата
             ViewBag.PatientName = patient.Name;
 
-            // Подготвяме празен модел с вече попълнено ID на пациента и текуща дата
+            // Подготвя се празен модел с вече попълнено ID на пациента и текуща дата
             var model = new MedicalRecord
             {
                 PatientId = patientId,
@@ -42,11 +42,11 @@ namespace VetClinic.Controllers
             return View(model);
         }
 
-        // 2. POST: Запазва данните в базата
+        // POST: Запазва данните в базата
         [HttpPost]
         public IActionResult Create(MedicalRecord record)
         {
-            // ИГНОРИРАМЕ НАВИГАЦИОННИТЕ СВОЙСТВА ЗА ДА МИНЕ ВАЛИДАЦИЯТА
+            // ИГНОРИРА НАВИГАЦИОННИТЕ СВОЙСТВА ЗА ДА МИНЕ ВАЛИДАЦИЯТА
             ModelState.Remove("Patient");
             ModelState.Remove("Vet");
 
@@ -67,7 +67,7 @@ namespace VetClinic.Controllers
             return View(record);
         }
 
-        // 3. GET: Зарежда картона за редакция
+        // GET: Зарежда картона за редакция
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -84,11 +84,11 @@ namespace VetClinic.Controllers
             return View(record);
         }
 
-        // 4. POST: Запазва промените
+        // POST: Запазва промените
         [HttpPost]
         public IActionResult Edit(MedicalRecord record)
         {
-            // ИГНОРИРАМЕ НАВИГАЦИОННИТЕ СВОЙСТВА ЗА ДА МИНЕ ВАЛИДАЦИЯТА
+            // ИГНОРИРАМЕ НАВИГАЦИОННИТЕ СВОЙСТВА ЗА ДА МИНЕ ВАЛИДАЦИЯТА (отново)
             ModelState.Remove("Patient");
             ModelState.Remove("Vet");
 
@@ -106,13 +106,13 @@ namespace VetClinic.Controllers
             return View(record);
         }
 
-        // 5. GET: Изтриване на картон
+        // GET: Изтриване на картон
         public IActionResult Delete(int id)
         {
             var record = _context.MedicalRecords.Find(id);
             if (record != null)
             {
-                int patientId = record.PatientId; // Запазваме ID-то на пациента, за да се върнем при него
+                int patientId = record.PatientId; // Запазва се ID-то на пациента, за да се върнем при него
 
                 _context.MedicalRecords.Remove(record);
                 _context.SaveChanges();

@@ -4,9 +4,9 @@ public interface IOwnerService
 {
     IEnumerable<Owner> GetAllOwners();
     void AddOwner(Owner owner);
-    void DeleteOwner(int id); // Увери се, че това го има за Delete бутона!
+    void DeleteOwner(int id);
 
-    // НОВИ МЕТОДИ ЗА РЕДАКЦИЯ:
+    // меотди за редакцията на собствениците
     Owner GetOwnerById(int id);
     void UpdateOwner(Owner owner);
 }

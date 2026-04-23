@@ -4,7 +4,6 @@ namespace VetClinic.Models.ViewModels
 {
     public class PatientInputModel
     {
-        // НОВО: Това поле липсваше и затова дава грешката "does not contain definition for Id"
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Името е задължително")]
@@ -19,7 +18,6 @@ namespace VetClinic.Models.ViewModels
         public string? Breed { get; set; }
 
         [Display(Name = "Възраст")]
-        // Тук използваме int (цяло число). Ако в базата е null, ще го направим на 0.
         public int Age { get; set; }
 
         [Display(Name = "Собственик")]

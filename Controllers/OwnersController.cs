@@ -13,21 +13,21 @@ namespace VetClinic.Controllers
             _ownerService = ownerService;
         }
 
-        // 1. Списък със собственици
+        // Списък със собственици
         public IActionResult Index()
         {
             var owners = _ownerService.GetAllOwners();
             return View(owners);
         }
 
-        // 2. GET: Форма за нов собственик
+        // GET: Форма за нов собственик
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // 3. POST: Запазване на собственик
+        // POST: Запазване на собственик
         [HttpPost]
         public IActionResult Create(Owner owner)
         {
@@ -39,8 +39,7 @@ namespace VetClinic.Controllers
             return View(owner);
         }
 
-        // 4. Изтриване
-        // 1. GET: Зарежда страницата за потвърждение (Delete.cshtml)
+        // 4. Изтриване (Изглед за потвърждение)
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -50,18 +49,14 @@ namespace VetClinic.Controllers
             return View(owner);
         }
 
-        // 2. POST: Извършва реалното изтриване след натискане на червения бутон
+        // POST: Извършва реалното изтриване след натискане на червения бутон
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int OwnerId)
         {
             _ownerService.DeleteOwner(OwnerId);
             return RedirectToAction("Index");
         }
-        // ---------------------------------------------------------
-        // НАЧАЛО НА EDIT МЕТОДИТЕ
-        // ---------------------------------------------------------
-
-        // 5. GET: Отваря формата за редакция с попълнени данни
+        // GET: Отваря формата за редакция с попълнени данни
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -75,7 +70,7 @@ namespace VetClinic.Controllers
             return View(owner);
         }
 
-        // 6. POST: Запазва промените в базата
+        // POST: Запазва промените в базата
         [HttpPost]
         public IActionResult Edit(Owner owner)
         {
