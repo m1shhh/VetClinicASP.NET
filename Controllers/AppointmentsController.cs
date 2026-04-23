@@ -154,7 +154,7 @@ namespace VetClinic.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Ако има грешка (напр. празно поле), зареждаме менютата пак!
+                // Ако има грешка (напр. празно поле), зареждане на менютата пак
                 LoadDropdowns();
                 return View(model);
             }
