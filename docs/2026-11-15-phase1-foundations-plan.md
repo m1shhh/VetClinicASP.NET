@@ -115,6 +115,8 @@ PetCare/
 
 ### Task 3: EF Migrations baseline върху съществуващата БД
 
+> **Адаптация (15.11, одобрена от собственика):** старата dev БД (`mishi\SQLEXpress`, Windows) е недостъпна от Mac и е излязла от употреба. Dev база = Docker SQL Server 2025 на localhost:1433 (SQL auth, паролата само в user-secrets, въведена от собственика). Базата ще се създаде празна от самите миграции → рецептата "mark applied" отпада; fresh-DB пътят е единственият. Таблица от пре-fлай проверката за `DurationMinutes` отпада също — fresh базата получава схемата от модела (включително DurationMinutes). Поправеният connection string е потвърден като работещ — собственикът повторно записа user-secrets на 15.11.
+
 **Files:** Create `Migrations/<ts>_InitialBaseline.cs` (generated); modify root csproj (пакет `Microsoft.EntityFrameworkCore.Design` 10.0.2).
 
 - [ ] **Step 1 (preflight):** SQL проверка, че колоната `Appointments.DurationMinutes` СЪЩЕСТВУВА в dev БД (комит „added a calendar and appointment duration“ го подсказва). Ако липсва — ръчно `ALTER TABLE Appointments ADD DurationMinutes int NOT NULL DEFAULT 30;` ПИНВА се: без това baseline-ът ще create-не таблица без нея и следващите UPDATE-и на dev БД ще гърмят.
