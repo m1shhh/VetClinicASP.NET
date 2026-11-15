@@ -37,6 +37,10 @@ namespace VetClinicASP.NET.Migrations
                     b.Property<TimeOnly>("AppointmentTime")
                         .HasColumnType("time");
 
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
+
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
@@ -59,7 +63,68 @@ namespace VetClinicASP.NET.Migrations
 
                     b.HasIndex("VetId");
 
+                    b.HasIndex(new[] { "ClinicId" }, "IX_Appointments_ClinicID");
+
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("VetClinicASP.NET.Models.Clinic", b =>
+                {
+                    b.Property<int>("ClinicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClinicId"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("BillingPaidUntilUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BillingProblem")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("BillingStatus")
+                        .HasColumnType("int")
+                        .HasColumnName("BillingStatus");
+
+                    b.Property<DateTime?>("ConsentGivenAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ConsentTextVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("TrialEndsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ClinicId")
+                        .HasName("PK_Clinics");
+
+                    b.ToTable("Clinics");
                 });
 
             modelBuilder.Entity("VetClinicASP.NET.Models.MedicalRecord", b =>
@@ -70,6 +135,10 @@ namespace VetClinicASP.NET.Migrations
                         .HasColumnName("RecordID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecordId"));
+
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
 
                     b.Property<string>("Diagnosis")
                         .HasMaxLength(255)
@@ -101,6 +170,8 @@ namespace VetClinicASP.NET.Migrations
 
                     b.HasIndex("VetId");
 
+                    b.HasIndex(new[] { "ClinicId" }, "IX_MedicalRecords_ClinicID");
+
                     b.ToTable("MedicalRecords");
                 });
 
@@ -117,6 +188,10 @@ namespace VetClinicASP.NET.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
+
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -132,6 +207,8 @@ namespace VetClinicASP.NET.Migrations
 
                     b.HasKey("OwnerId")
                         .HasName("PK__Owners__819385988929FEA8");
+
+                    b.HasIndex(new[] { "ClinicId" }, "IX_Owners_ClinicID");
 
                     b.ToTable("Owners");
                 });
@@ -152,6 +229,10 @@ namespace VetClinicASP.NET.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -171,6 +252,8 @@ namespace VetClinicASP.NET.Migrations
 
                     b.HasIndex("OwnerId");
 
+                    b.HasIndex(new[] { "ClinicId" }, "IX_Patients_ClinicID");
+
                     b.ToTable("Patients");
                 });
 
@@ -182,6 +265,10 @@ namespace VetClinicASP.NET.Migrations
                         .HasColumnName("VaccinationID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VaccinationId"));
+
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
 
                     b.Property<DateOnly>("DateAdministered")
                         .HasColumnType("date");
@@ -209,6 +296,8 @@ namespace VetClinicASP.NET.Migrations
 
                     b.HasIndex("VetId");
 
+                    b.HasIndex(new[] { "ClinicId" }, "IX_Vaccinations_ClinicID");
+
                     b.ToTable("Vaccinations");
                 });
 
@@ -220,6 +309,10 @@ namespace VetClinicASP.NET.Migrations
                         .HasColumnName("VetID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VetId"));
+
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
@@ -245,11 +338,20 @@ namespace VetClinicASP.NET.Migrations
                     b.HasKey("VetId")
                         .HasName("PK__Veterina__2556B80EC135EAEB");
 
+                    b.HasIndex(new[] { "ClinicId" }, "IX_Veterinarians_ClinicID");
+
                     b.ToTable("Veterinarians");
                 });
 
             modelBuilder.Entity("VetClinicASP.NET.Models.Appointment", b =>
                 {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("Appointments")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Appointments_Clinic");
+
                     b.HasOne("VetClinicASP.NET.Models.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
@@ -262,6 +364,8 @@ namespace VetClinicASP.NET.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__Appointme__VetID__52593CB8");
 
+                    b.Navigation("Clinic");
+
                     b.Navigation("Patient");
 
                     b.Navigation("Vet");
@@ -269,6 +373,13 @@ namespace VetClinicASP.NET.Migrations
 
             modelBuilder.Entity("VetClinicASP.NET.Models.MedicalRecord", b =>
                 {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("MedicalRecords")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_MedicalRecords_Clinic");
+
                     b.HasOne("VetClinicASP.NET.Models.Patient", "Patient")
                         .WithMany("MedicalRecords")
                         .HasForeignKey("PatientId")
@@ -280,24 +391,54 @@ namespace VetClinicASP.NET.Migrations
                         .HasForeignKey("VetId")
                         .HasConstraintName("FK__MedicalRe__VetID__571DF1D5");
 
+                    b.Navigation("Clinic");
+
                     b.Navigation("Patient");
 
                     b.Navigation("Vet");
                 });
 
+            modelBuilder.Entity("VetClinicASP.NET.Models.Owner", b =>
+                {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("Owners")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Owners_Clinic");
+
+                    b.Navigation("Clinic");
+                });
+
             modelBuilder.Entity("VetClinicASP.NET.Models.Patient", b =>
                 {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("Patients")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Patients_Clinic");
+
                     b.HasOne("VetClinicASP.NET.Models.Owner", "Owner")
                         .WithMany("Patients")
                         .HasForeignKey("OwnerId")
                         .IsRequired()
                         .HasConstraintName("FK__Patients__OwnerI__4E88ABD4");
 
+                    b.Navigation("Clinic");
+
                     b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("VetClinicASP.NET.Models.Vaccination", b =>
                 {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("Vaccinations")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Vaccinations_Clinic");
+
                     b.HasOne("VetClinicASP.NET.Models.Patient", "Patient")
                         .WithMany("Vaccinations")
                         .HasForeignKey("PatientId")
@@ -309,9 +450,38 @@ namespace VetClinicASP.NET.Migrations
                         .HasForeignKey("VetId")
                         .HasConstraintName("FK__Vaccinati__VetID__5AEE82B9");
 
+                    b.Navigation("Clinic");
+
                     b.Navigation("Patient");
 
                     b.Navigation("Vet");
+                });
+
+            modelBuilder.Entity("VetClinicASP.NET.Models.Veterinarian", b =>
+                {
+                    b.HasOne("VetClinicASP.NET.Models.Clinic", "Clinic")
+                        .WithMany("Veterinarians")
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Veterinarians_Clinic");
+
+                    b.Navigation("Clinic");
+                });
+
+            modelBuilder.Entity("VetClinicASP.NET.Models.Clinic", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("MedicalRecords");
+
+                    b.Navigation("Owners");
+
+                    b.Navigation("Patients");
+
+                    b.Navigation("Vaccinations");
+
+                    b.Navigation("Veterinarians");
                 });
 
             modelBuilder.Entity("VetClinicASP.NET.Models.Owner", b =>

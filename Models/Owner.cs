@@ -15,5 +15,9 @@ public partial class Owner
 
     public string? Address { get; set; }
 
+    public int ClinicId { get; set; }
+
+    public virtual Clinic Clinic { get; set; } = null!;
+
     public virtual ICollection<Patient> Patients { get; set; } = new List<Patient>();
 }

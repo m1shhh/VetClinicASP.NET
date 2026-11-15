@@ -17,6 +17,10 @@ public partial class Patient
 
     public int OwnerId { get; set; }
 
+    public int ClinicId { get; set; }
+
+    public virtual Clinic Clinic { get; set; } = null!;
+
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public virtual ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
