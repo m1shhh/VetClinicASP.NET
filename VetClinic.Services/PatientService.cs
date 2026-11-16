@@ -20,6 +20,37 @@ namespace VetClinic.Services
         // Списък с пациенти + Търсене
         public IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder)
         {
+            bool isDesc = sortOrder == "desc";
+
+            // Owner.FullName е КРИПТИРАНА колона (Task 6): EF би превел Contains/OrderBy
+            // срещу ШИФРОТЕКСТА в SQL (тихо грешен резултат; при LIKE-превода EF дори
+            // хвърля SqlException). Затова клонът "owner" материализира пациентите на
+            // ТЕКУЩАТА клиника (global query filter-ът в VetClinicContext.Tenancy.cs вече е
+            // ограничил набора — никога не излиза извън клиниката) и филтрира/сортира
+            // В ПАМЕТА върху декриптираните стойности.
+            // Компромис (design doc §3.2): пилотният мащаб е стотици до няколко хиляди
+            // пациента на клиника → цената на in-memory филтъра е незабележима; печалбата —
+            // коректно търсене/сортиране по криптирани имена. Не-криптираните колони
+            // (Name/Breed/Age) остават на SQL ниво.
+            if (filterType == "owner")
+            {
+                var ownersPatients = _context.Patients.Include(p => p.Owner).ToList();
+
+                if (!string.IsNullOrEmpty(searchString))
+                {
+                    var needle = searchString.ToLower();
+                    ownersPatients = ownersPatients
+                        .Where(p => p.Owner != null
+                                    && p.Owner.FullName != null
+                                    && p.Owner.FullName.ToLower().Contains(needle))
+                        .ToList();
+                }
+
+                return isDesc
+                    ? ownersPatients.OrderByDescending(p => p.Owner?.FullName).ToList()
+                    : ownersPatients.OrderBy(p => p.Owner?.FullName).ToList();
+            }
+
             // Базова заявка с включен собственик
             var query = _context.Patients.Include(p => p.Owner).AsQueryable();
 
@@ -29,9 +60,6 @@ namespace VetClinic.Services
                 searchString = searchString.ToLower();
                 switch (filterType)
                 {
-                    case "owner":
-                        query = query.Where(p => p.Owner.FullName.ToLower().Contains(searchString));
-                        break;
                     case "breed":
                         query = query.Where(p => p.Breed != null && p.Breed.ToLower().Contains(searchString));
                         break;
@@ -47,13 +75,8 @@ namespace VetClinic.Services
             }
 
             // СОРТИРАНЕ (Работи винаги, дори и без текст за търсене)
-            bool isDesc = sortOrder == "desc";
-
             switch (filterType)
             {
-                case "owner":
-                    query = isDesc ? query.OrderByDescending(p => p.Owner.FullName) : query.OrderBy(p => p.Owner.FullName);
-                    break;
                 case "breed":
                     query = isDesc ? query.OrderByDescending(p => p.Breed) : query.OrderBy(p => p.Breed);
                     break;

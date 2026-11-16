@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VetClinic.Security;
 using VetClinic.Services;
+using VetClinicASP.NET.Infrastructure;
 using VetClinicASP.NET.Models;
 using VetClinic.Models;
 
@@ -18,6 +19,12 @@ builder.Services.AddScoped<IVeterinarianService, VeterinarianService>();
 builder.Services.AddDbContext<VetClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 1.2.1. Криптиране при запис (Task 6): singleton, за да е ЕДИН ключ/инстанция за всички
+// context-и — те го прихващат в ctor-а и строят конверторите в OnModelCreating
+// (референтен модел: AzITi ApplicationDbContext). Ключът идва от
+// Encryption:MasterKey (dev: user-secrets; prod: env var) — НИКОГА в кода/git.
+builder.Services.AddSingleton<EncryptionService>(_ => new EncryptionService(builder.Configuration));
+
 // 1.3. Тенант изолация: ICurrentClinic (claims → clinic_id) + DbContext с този контекст.
 // Без тези регистрации AddDbContext не може да конструира context-а с tenant филтрите.
 builder.Services.AddHttpContextAccessor();
@@ -29,14 +36,34 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IVaccinationService, VaccinationService>(); // <-- Това добавихме последно
 builder.Services.AddScoped<IOwnerService, OwnerService>();
 
+// 1.4. Однократен поддръжков инструмент за криптиране на съществуващи данни (Task 6).
+builder.Services.AddScoped<EncryptExistingDataService>();
+
 // =========================================================
-// 2. СГЛОБЯВАНЕ НА ПРИЛОЖЕНИЕТО (BUILD)
+// 2. ОДНОКРАТЕН РЕЖИМ: --encrypt-existing (Task 6)
+// Консолен поддръжков проход: зарежда редовете на шестте tenant таблици
+// (read passthrough на legacy plaintext) и ги криптира при запис. Излиза
+// БЕЗ да стартира web сървъра. Idempotentен — второ пускане е no-op.
+// =========================================================
+if (args.Contains("--encrypt-existing"))
+{
+    var maintenanceApp = builder.Build();
+    using (var scope = maintenanceApp.Services.CreateScope())
+    {
+        scope.ServiceProvider.GetRequiredService<EncryptExistingDataService>().Run();
+    }
+
+    return;
+}
+
+// =========================================================
+// 3. СГЛОБЯВАНЕ НА ПРИЛОЖЕНИЕТО (BUILD)
 // След този ред НЕ можеш да ползваш builder.Services!
 // =========================================================
 var app = builder.Build();
 
 // =========================================================
-// 3. КОНФИГУРАЦИЯ НА HTTP REQUEST PIPELINE
+// 4. КОНФИГУРАЦИЯ НА HTTP REQUEST PIPELINE
 // =========================================================
 
 if (!app.Environment.IsDevelopment())

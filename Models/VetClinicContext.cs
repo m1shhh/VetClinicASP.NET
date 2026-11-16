@@ -7,6 +7,11 @@ public partial class VetClinicContext : DbContext
 {
     private readonly int? _currentClinicId;
 
+    // Задължителен по време на работа (fail-fast в OnModelCreatingPartial — VetClinicContext.Tenancy.cs):
+    // без конверторите моделът на този тип context би бил кеширан БЕЗ тях и би се отровил за всички.
+    // Nullable е само за да е валиден параметричният design-time ctor — той НЕ се ползва по време на работа.
+    private readonly EncryptionService? _encryptionService;
+
     public VetClinicContext()
     {
     }
@@ -20,10 +25,14 @@ public partial class VetClinicContext : DbContext
     // всички tenant заявки към тази клиника. null (design-time / оператор) → deny-by-default.
     // ВАЖНО: никога НЕ ползвай този контекст с DbContext pooling (AddDbContextPool) —
     // прихванатият в ctor-а _currentClinicId би замръзнал между заявките.
-    public VetClinicContext(DbContextOptions<VetClinicContext> options, ICurrentClinic currentClinic)
+    public VetClinicContext(
+        DbContextOptions<VetClinicContext> options,
+        ICurrentClinic currentClinic,
+        EncryptionService encryption)
         : base(options)
     {
         _currentClinicId = currentClinic.ClinicId;
+        _encryptionService = encryption;
     }
 
     public virtual DbSet<Appointment> Appointments { get; set; }
@@ -46,7 +55,8 @@ public partial class VetClinicContext : DbContext
 
             entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
             entity.Property(e => e.PatientId).HasColumnName("PatientID");
-            entity.Property(e => e.Reason).HasMaxLength(255);
+            // Reason е криптирана колона (nvarchar(max) + конвертор — VetClinicContext.Tenancy.cs);
+            // дължината се валидира на ниво приложение, не в схемата.
             entity.Property(e => e.VetId).HasColumnName("VetID");
 
             entity.HasOne(d => d.Patient).WithMany(p => p.Appointments)
@@ -65,7 +75,8 @@ public partial class VetClinicContext : DbContext
             entity.HasKey(e => e.RecordId).HasName("PK__MedicalR__FBDF78C98993C7E5");
 
             entity.Property(e => e.RecordId).HasColumnName("RecordID");
-            entity.Property(e => e.Diagnosis).HasMaxLength(255);
+            // Diagnosis/Treatment/Notes са криптирани колони (nvarchar(max) + конвертор —
+            // VetClinicContext.Tenancy.cs); дължината се валидира на ниво приложение.
             entity.Property(e => e.PatientId).HasColumnName("PatientID");
             entity.Property(e => e.RecordDate)
                 .HasDefaultValueSql("(getdate())")
@@ -87,10 +98,8 @@ public partial class VetClinicContext : DbContext
             entity.HasKey(e => e.OwnerId).HasName("PK__Owners__819385988929FEA8");
 
             entity.Property(e => e.OwnerId).HasColumnName("OwnerID");
-            entity.Property(e => e.Address).HasMaxLength(255);
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            // FullName/PhoneNumber/Email/Address са криптирани колони (nvarchar(max) +
+            // конвертор — VetClinicContext.Tenancy.cs); дължините се валидират на ниво приложение.
         });
 
         modelBuilder.Entity<Patient>(entity =>
@@ -133,9 +142,9 @@ public partial class VetClinicContext : DbContext
             entity.HasKey(e => e.VetId).HasName("PK__Veterina__2556B80EC135EAEB");
 
             entity.Property(e => e.VetId).HasColumnName("VetID");
-            entity.Property(e => e.Email).HasMaxLength(100);
+            // PhoneNumber/Email са криптирани колони (nvarchar(max) + конвертор —
+            // VetClinicContext.Tenancy.cs); FullName ОСТАВА cleartext (търсене/показване в SQL).
             entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.Specialization).HasMaxLength(100);
             entity.Property(e => e.WorkingHours).HasMaxLength(100);
         });

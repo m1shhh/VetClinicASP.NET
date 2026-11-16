@@ -1,7 +1,10 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using VetClinic.Security;
 using VetClinicASP.NET.Models;
 using Xunit;
 
@@ -14,6 +17,12 @@ namespace PetCare.Tests.Infrastructure
     /// Създава ephemeral база PetCareTests_{guid} върху dev SQL Server-а, прилага миграциите
     /// и я пуска при DisposeAsync. Master връзката идва от env PETCARE_TEST_MASTER (CI),
     /// иначе от user-secrets на root проекта (паролата НИКОГА не се отпечатва).
+    ///
+    /// Притежава ЕДИН тестов EncryptionService (случайн 32-байтов ключ, in-memory конфиг —
+    /// същият модел като EncryptionServiceTests): всички context-и през
+    /// <see cref="CreateContext"/> получават конверторите с ТОЗИ ключ. Еднакъв ключ е задължителен —
+    /// EF кешира един модел за тип context, така че смесени ключове/липсващи конвертори
+    /// биха се отровили взаимно.
     /// </summary>
     [CollectionDefinition("SqlTestDatabase")]
     public sealed class SqlTestDatabaseCollection : ICollectionFixture<SqlTestDatabaseFixture>
@@ -31,11 +40,25 @@ namespace PetCare.Tests.Infrastructure
 
         public string ConnectionString { get; }
 
+        /// <summary>Единственият EncryptionService за цялото тестово изпълнение (случайн ключ).</summary>
+        public EncryptionService Encryption { get; }
+
         public SqlTestDatabaseFixture()
         {
             _masterConnectionString = ResolveMasterConnectionString();
             TestDatabaseName = TestDatabasePrefix + Guid.NewGuid().ToString("N");
             ConnectionString = WithCatalog(_masterConnectionString, TestDatabaseName);
+            Encryption = CreateEncryptionService();
+        }
+
+        /// <summary>Контекст с конверторите (fixture-ов ключ) + tenant филтрите на подадения ICurrentClinic.</summary>
+        public VetClinicContext CreateContext(ICurrentClinic currentClinic)
+        {
+            var options = new DbContextOptionsBuilder<VetClinicContext>()
+                .UseSqlServer(ConnectionString)
+                .Options;
+
+            return new VetClinicContext(options, currentClinic, Encryption);
         }
 
         public async Task InitializeAsync()
@@ -49,11 +72,7 @@ namespace PetCare.Tests.Infrastructure
             }
 
             // Migrate върху контекст с null-clinic: миграциите са DDL и не пипат query filter-ите.
-            var options = new DbContextOptionsBuilder<VetClinicContext>()
-                .UseSqlServer(ConnectionString)
-                .Options;
-
-            await using var context = new VetClinicContext(options, new TestClinicContext(null));
+            await using var context = CreateContext(new TestClinicContext(null));
             await context.Database.MigrateAsync();
         }
 
@@ -91,6 +110,21 @@ namespace PetCare.Tests.Infrastructure
             };
 
             return builder.ConnectionString;
+        }
+
+        // Свеж случайн 32-байтов ключ (Base64) на всяко тестово изпълнение —
+        // същият модел като EncryptionServiceTests (in-memory ConfigurationBuilder).
+        private static EncryptionService CreateEncryptionService()
+        {
+            var key = RandomNumberGenerator.GetBytes(32);
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(key)
+                })
+                .Build();
+
+            return new EncryptionService(configuration);
         }
 
         private static string ResolveMasterConnectionString()

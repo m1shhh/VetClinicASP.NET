@@ -133,11 +133,9 @@ namespace PetCare.Tests
 
         private VetClinicContext CreateContext(int? clinicId)
         {
-            var options = new DbContextOptionsBuilder<VetClinicContext>()
-                .UseSqlServer(_fixture.ConnectionString)
-                .Options;
-
-            return new VetClinicContext(options, new TestClinicContext(clinicId));
+            // През fixture-а: контекстът получава тестовия EncryptionService (конвертори)
+            // и tenant филтрите на TestClinicContext(clinicId).
+            return _fixture.CreateContext(new TestClinicContext(clinicId));
         }
 
         private SeedResult SeedTwoClinics()
