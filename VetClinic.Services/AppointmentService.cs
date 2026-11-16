@@ -1,16 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VetClinicASP.NET.Models;
 using VetClinic.Models.ViewModels;
+using VetClinic.Security;
 
 namespace VetClinic.Services
 {
     public class AppointmentService : IAppointmentService
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public AppointmentService(VetClinicContext context)
+        public AppointmentService(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         // взима всички срещи или часове
@@ -55,7 +58,8 @@ namespace VetClinic.Services
                 AppointmentDate = DateOnly.FromDateTime(model.DateTime),
                 AppointmentTime = TimeOnly.FromDateTime(model.DateTime),
 
-                DurationMinutes = model.DurationMinutes
+                DurationMinutes = model.DurationMinutes,
+                ClinicId = _currentClinic.GetRequiredClinicId()
             };
 
             _context.Appointments.Add(appointment);

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using VetClinicASP.NET.Models;
+using VetClinic.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace VetClinic.Services
@@ -8,10 +9,12 @@ namespace VetClinic.Services
     public class OwnerService : IOwnerService
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public OwnerService(VetClinicContext context)
+        public OwnerService(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         public IEnumerable<Owner> GetAllOwners()
@@ -23,6 +26,7 @@ namespace VetClinic.Services
 
         public void AddOwner(Owner owner)
         {
+            owner.ClinicId = _currentClinic.GetRequiredClinicId();
             _context.Owners.Add(owner);
             _context.SaveChanges();
         }

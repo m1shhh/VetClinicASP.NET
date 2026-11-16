@@ -1,5 +1,6 @@
 ﻿using VetClinic.Models;
 using VetClinic.Models.ViewModels;
+using VetClinic.Security;
 using VetClinicASP.NET.Models;
 
 namespace VetClinic.Services
@@ -7,10 +8,12 @@ namespace VetClinic.Services
     public class VaccinationService : IVaccinationService
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public VaccinationService(VetClinicContext context)
+        public VaccinationService(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         public void AddVaccination(VaccinationInputModel model)
@@ -25,7 +28,9 @@ namespace VetClinic.Services
 
                 NextDueDate = model.NextDueDate.HasValue
                     ? DateOnly.FromDateTime(model.NextDueDate.Value)
-                    : null
+                    : null,
+
+                ClinicId = _currentClinic.GetRequiredClinicId()
             };
 
             _context.Vaccinations.Add(vaccine);

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VetClinic.Models;
 using VetClinic.Models.ViewModels;
+using VetClinic.Security;
 using VetClinicASP.NET.Models;
 
 namespace VetClinic.Services
@@ -8,10 +9,12 @@ namespace VetClinic.Services
     public class PatientService : IPatientService
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public PatientService(VetClinicContext context)
+        public PatientService(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         // Списък с пациенти + Търсене
@@ -115,7 +118,8 @@ namespace VetClinic.Services
                 Species = model.Species,
                 Breed = model.Breed,
                 Age = model.Age,
-                OwnerId = model.OwnerId
+                OwnerId = model.OwnerId,
+                ClinicId = _currentClinic.GetRequiredClinicId()
             };
 
             _context.Patients.Add(patient);

@@ -177,6 +177,8 @@ PetCare/
 - [ ] **Step 1 (failing tests):** CreateStaff(Vet) → user с role Vet + linked Veterinarian ред със същия ClinicId; SetStaffActive(false) → user.IsActive=false, Veterinarian редът ОСТАВА, истор. записите непокътнати; CreateStaff като Receptionist в чужда клиника → не вижда чужд персонал (ListStaff празен за друг контекст).
 - [ ] **Step 2–4:** verify fail → имплементация → verify pass. **Step 5:** Commit: `feat(staff): staff management with linked veterinarian profiles`.
 
+> **Разширение (16.11, от Task 5 ревю, отложено тук):** Create-пътищата на Patient/Appointment/Vaccination валидират FK референциите (OwnerId / PatientId / VeterinarianId) през ФИЛТРИРАНИЯ контекст — cross-tenant безопасно (чужд/несъществуващ FK id → NotFound), по модела на MedicalRecordsController.Create/Edit от Task 5.
+
 ### Task 9: Операторски панел + bootstrap seed + IsActive enforcement
 
 **Files:** Create `VetClinic.Services/IOperatorMetadataService.cs`/`OperatorMetadataService.cs`, `Controllers/OperatorController.cs`, `Views/Operator/{Index,NewClinic}.cshtml`, `VetClinic.Security/ClinicActiveFilter.cs`, `Infrastructure/OperatorSeedService.cs` (IHostedService); Modify `Program.cs` (filter + seed + metadata DI); Modify `Views/Shared/_Layout.cshtml` (условни линкове: Operator → панел; ClinicAdmin → Служители); Test `OperatorPanelTests.cs`, `ClinicActiveEnforcementTests.cs`.

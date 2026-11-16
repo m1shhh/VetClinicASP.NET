@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VetClinic.Security;
 
 namespace VetClinicASP.NET.Models;
 
 public partial class VetClinicContext : DbContext
 {
+    private readonly int? _currentClinicId;
+
     public VetClinicContext()
     {
     }
@@ -11,6 +14,16 @@ public partial class VetClinicContext : DbContext
     public VetClinicContext(DbContextOptions<VetClinicContext> options)
         : base(options)
     {
+    }
+
+    // Контекст с клиничен контекст: query filter-ите (VetClinicContext.Tenancy.cs) заключват
+    // всички tenant заявки към тази клиника. null (design-time / оператор) → deny-by-default.
+    // ВАЖНО: никога НЕ ползвай този контекст с DbContext pooling (AddDbContextPool) —
+    // прихванатият в ctor-а _currentClinicId би замръзнал между заявките.
+    public VetClinicContext(DbContextOptions<VetClinicContext> options, ICurrentClinic currentClinic)
+        : base(options)
+    {
+        _currentClinicId = currentClinic.ClinicId;
     }
 
     public virtual DbSet<Appointment> Appointments { get; set; }

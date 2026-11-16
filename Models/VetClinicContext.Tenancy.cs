@@ -10,6 +10,21 @@ public partial class VetClinicContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
+        // Deny-by-default изолация по клиники (design doc §3.1):
+        // заявка без клиничен контекст → ClinicID = NULL → нула реда (SQL UNKNOWN), не изключение.
+        // Clinic НЕ е филтриран — той е tenant коренът, видими метаданни за всички сесии.
+        modelBuilder.Entity<Owner>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
+        modelBuilder.Entity<Patient>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
+        modelBuilder.Entity<Appointment>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
+        modelBuilder.Entity<MedicalRecord>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
+        modelBuilder.Entity<Vaccination>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
+        modelBuilder.Entity<Veterinarian>().HasQueryFilter(e => e.ClinicId == _currentClinicId);
+
         modelBuilder.Entity<Clinic>(entity =>
         {
             entity.HasKey(e => e.ClinicId).HasName("PK_Clinics");

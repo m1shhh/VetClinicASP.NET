@@ -1,14 +1,17 @@
 ﻿using VetClinicASP.NET.Models;
+using VetClinic.Security;
 
 namespace VetClinic.Services
 {
     public class VeterinarianService : IVeterinarianService
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public VeterinarianService(VetClinicContext context)
+        public VeterinarianService(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         public List<Veterinarian> GetAllVeterinarians()
@@ -23,6 +26,7 @@ namespace VetClinic.Services
 
         public void AddVeterinarian(Veterinarian vet)
         {
+            vet.ClinicId = _currentClinic.GetRequiredClinicId();
             _context.Veterinarians.Add(vet);
             _context.SaveChanges();
         }

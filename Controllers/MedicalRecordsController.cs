@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using VetClinic.Security;
 using VetClinicASP.NET.Models;
 using System;
 using System.Linq;
@@ -9,10 +10,12 @@ namespace VetClinic.Controllers
     public class MedicalRecordsController : Controller
     {
         private readonly VetClinicContext _context;
+        private readonly ICurrentClinic _currentClinic;
 
-        public MedicalRecordsController(VetClinicContext context)
+        public MedicalRecordsController(VetClinicContext context, ICurrentClinic currentClinic)
         {
             _context = context;
+            _currentClinic = currentClinic;
         }
 
         // GET: Зарежда формата за нов преглед
@@ -52,6 +55,16 @@ namespace VetClinic.Controllers
 
             if (ModelState.IsValid)
             {
+                // Тенант проверка: пациентът трябва да съществува И да е от текущата клиника.
+                // Глобалният query filter скрива пациентите на другите клиники — Find върху
+                // филтрираното множество връща null и за несъществуващ, и за чужд пациент.
+                var patientInClinic = _context.Patients.Find(record.PatientId);
+                if (patientInClinic == null)
+                {
+                    return NotFound("Пациентът не е намерен.");
+                }
+
+                record.ClinicId = _currentClinic.GetRequiredClinicId();
                 _context.MedicalRecords.Add(record);
                 _context.SaveChanges();
 
@@ -94,11 +107,23 @@ namespace VetClinic.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.MedicalRecords.Update(record);
+                // Ownership през ФИЛТРИРАНИЯ контекст: чужд/несъществуващ RecordId → null → NotFound.
+                var existing = _context.MedicalRecords.Find(record.RecordId);
+                if (existing == null)
+                {
+                    return NotFound("Картонът не е намерен.");
+                }
+
+                existing.Diagnosis  = record.Diagnosis;
+                existing.Treatment  = record.Treatment;
+                existing.Notes      = record.Notes;
+                existing.RecordDate = record.RecordDate;
+                existing.VetId      = record.VetId;
+                // ClinicId/PatientId остават непокътнати — query filter-ът пази само четения.
                 _context.SaveChanges();
 
                 // Връщаме се в досието на животното
-                return RedirectToAction("Details", "Patients", new { id = record.PatientId });
+                return RedirectToAction("Details", "Patients", new { id = existing.PatientId });
             }
 
             // Ако има грешка, презареждаме лекарите и формата

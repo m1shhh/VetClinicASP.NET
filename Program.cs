@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VetClinic.Security;
 using VetClinic.Services;
 using VetClinicASP.NET.Models;
 using VetClinic.Models;
@@ -16,6 +17,11 @@ builder.Services.AddScoped<IVeterinarianService, VeterinarianService>();
 // 1.2. Връзка с SQL Server База данни
 builder.Services.AddDbContext<VetClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 1.3. Тенант изолация: ICurrentClinic (claims → clinic_id) + DbContext с този контекст.
+// Без тези регистрации AddDbContext не може да конструира context-а с tenant филтрите.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentClinic, CurrentClinic>();
 
 // 1.3. Регистриране на твоите Сървиси (Services)
 builder.Services.AddScoped<IPatientService, PatientService>();
