@@ -151,6 +151,8 @@ PetCare/
 
 ### Task 6: Криптиране на полетата + `--encrypt-existing`
 
+> **Адаптация (16.11, от имплементацията, потвърдена от ревю):** runner-ът НЕ е наивното "зареди, презапиши, SaveChanges" — EF change tracker пази *декриптирания* plaintext като оригинал, затова презаписване със същата стойност не отключва промяна, а форсиран запис на всеки ред би прекриптирал вече криптирани (чупи byte-idempotence). Реализиран механизъм: суров ADO pre-scan за клетки без `enc:v1:` → презапис само на тях през `EncryptionService.Encrypt` → SaveChanges. Миграцията е с 8 AlterColumn (Treatment/Notes вече бяха nvarchar(max) в baseline). Търсенето по стопанин е преместено в паметта (SQL LIKE върху шифрован текст хвърля SqlException).
+
 **Files:** Modify `VetClinicContext.Tenancy.cs` (конвертори върху посочените полета; колоните → `nvarchar(max)`); Create `Infrastructure/EncryptExistingDataService.cs`; Create миграция `EncryptColumnsToNvarcharMax`; Test `EncryptionAtRestTests.cs`.
 
 **Interfaces (Produces):** `EncryptExistingDataService` — стартира с `dotnet run -- --encrypt-existing`: за шестте таблици зарежда редовете (read passthrough на legacy plaintext), докосва криптираните свойства и прави `SaveChanges()` (write конверторът криптира); idempotent (второ пускане = no-op).
