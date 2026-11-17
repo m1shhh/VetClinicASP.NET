@@ -1,0 +1,127 @@
+@model VetClinic.Models.ViewModels.ClinicAdminUsersViewModel
+
+@{
+    ViewData["Title"] = "Служители";
+}
+
+<div class="container mt-4">
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Затвори"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">👥 Служители на клиниката</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.Staff.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Имейл</th>
+                                <th>Име</th>
+                                <th>Роля</th>
+                                <th>Статус</th>
+                                <th class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Staff)
+                            {
+                                <tr>
+                                    <td>@row.Email</td>
+                                    <td>@row.DisplayName</td>
+                                    <td>@row.Role</td>
+                                    <td>
+                                        @if (row.IsActive)
+                                        {
+                                            <span class="badge bg-success">Активен</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Деактивиран</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-action="ToggleActive" method="post" class="d-inline">
+                                            <input type="hidden" name="userId" value="@row.UserId" />
+                                            @if (row.IsActive)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">🚫 Деактивирай</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-success">✅ Активирай</button>
+                                            }
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">Все още няма добавени служители.</p>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow mt-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">➕ Добави служител</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateStaff" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="NewStaff.Email" class="form-label"></label>
+                        <input asp-for="NewStaff.Email" class="form-control" placeholder="sluzhitel@clinic.bg" />
+                        <span asp-validation-for="NewStaff.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NewStaff.DisplayName" class="form-label"></label>
+                        <input asp-for="NewStaff.DisplayName" class="form-control" placeholder="напр. Д-р Петър Ветеров" />
+                        <span asp-validation-for="NewStaff.DisplayName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NewStaff.Password" class="form-label"></label>
+                        <input asp-for="NewStaff.Password" class="form-control" />
+                        <small class="text-muted">Минимум 8 символа, с главна буква, малка буква и цифра.</small>
+                        <span asp-validation-for="NewStaff.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NewStaff.Role" class="form-label"></label>
+                        <select asp-for="NewStaff.Role" class="form-select" asp-items="Model.RoleOptions">
+                            <option value="">-- Изберете роля --</option>
+                        </select>
+                        <span asp-validation-for="NewStaff.Role" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="submit" class="btn btn-success">Създай акаунт</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

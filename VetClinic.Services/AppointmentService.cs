@@ -49,17 +49,52 @@ namespace VetClinic.Services
 
         public void AddAppointment(AppointmentInputModel model)
         {
+            var clinicId = _currentClinic.GetRequiredClinicId();
+
+            // FK валидация през ФИЛТРИРАНИЯ контекст (деферълът от Task 5 ревю → Task 8):
+            // пациентът трябва да е от ТЕКУЩАТА клиника — чужд/несъществуващ PatientId →
+            // throw (същият стил като GetRequiredClinicId; контролерът го surface-ва като NotFound).
+            if (_context.Patients.Find(model.PatientId) == null)
+            {
+                throw new InvalidOperationException("Пациентът не е намерен.");
+            }
+
+            int vetId;
+            if (_currentClinic.VetProfileId.HasValue)
+            {
+                // Self-приписване (Task 8): ветеринарен лекар записва винаги на СОБСТВЕНИЯ си
+                // профил — подаденият от формата VetId се ИГНОРИРА (не се валидира, не се приема).
+                vetId = _currentClinic.VetProfileId.Value;
+                // Евтина филтрирана проверка и за собствения профил: claim-ът идва от
+                // аутентикацията, но проверката е евтина и хваща остарял/избит profile id.
+                if (_context.Veterinarians.Find(vetId) == null)
+                {
+                    throw new InvalidOperationException("Ветеринарният лекар не е намерен.");
+                }
+            }
+            else
+            {
+                // Receptionist/ClinicAdmin подава VetId изрично — валиден САМО сред клиниката
+                // (Find върху филтрираното множество: чужд/несъществуващ лекар → throw).
+                if (_context.Veterinarians.Find(model.VeterinarianId) == null)
+                {
+                    throw new InvalidOperationException("Ветеринарният лекар не е намерен.");
+                }
+
+                vetId = model.VeterinarianId;
+            }
+
             var appointment = new Appointment
             {
                 PatientId = model.PatientId,
-                VetId = model.VeterinarianId,
+                VetId = vetId,
                 Reason = model.Reason,
 
                 AppointmentDate = DateOnly.FromDateTime(model.DateTime),
                 AppointmentTime = TimeOnly.FromDateTime(model.DateTime),
 
                 DurationMinutes = model.DurationMinutes,
-                ClinicId = _currentClinic.GetRequiredClinicId()
+                ClinicId = clinicId
             };
 
             _context.Appointments.Add(appointment);

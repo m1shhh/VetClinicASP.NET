@@ -135,6 +135,16 @@ namespace VetClinic.Services
         // Добавяне
         public void AddPatient(PatientInputModel model)
         {
+            var clinicId = _currentClinic.GetRequiredClinicId();
+
+            // FK валидация през ФИЛТРИРАНИЯ контекст (деферълът от Task 5 ревю → Task 8):
+            // стопанинът трябва да е от ТЕКУЩАТА клиника — чужд/несъществуващ OwnerId → throw
+            // (Find върху филтрираното множество връща null и за двата случая).
+            if (_context.Owners.Find(model.OwnerId) == null)
+            {
+                throw new InvalidOperationException("Стопанинът не е намерен.");
+            }
+
             var patient = new Patient
             {
                 Name = model.Name,
@@ -142,7 +152,7 @@ namespace VetClinic.Services
                 Breed = model.Breed,
                 Age = model.Age,
                 OwnerId = model.OwnerId,
-                ClinicId = _currentClinic.GetRequiredClinicId()
+                ClinicId = clinicId
             };
 
             _context.Patients.Add(patient);

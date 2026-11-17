@@ -64,6 +64,24 @@ namespace VetClinic.Controllers
                     return NotFound("Пациентът не е намерен.");
                 }
 
+                // Self-приписване (Task 8): ветеринарен лекар записа винаги на СОБСТВЕНИЯ си
+                // профил — формата не определя лектора. Служебен персонал подава VetId изрично —
+                // валиден САМО сред клиниката (филтриран Find; липсващ → NotFound като горните).
+                if (_currentClinic.VetProfileId.HasValue)
+                {
+                    var selfVet = _context.Veterinarians.Find(_currentClinic.VetProfileId.Value);
+                    if (selfVet == null)
+                    {
+                        return NotFound("Ветеринарният лекар не е намерен.");
+                    }
+
+                    record.VetId = selfVet.VetId;
+                }
+                else if (record.VetId.HasValue && _context.Veterinarians.Find(record.VetId.Value) == null)
+                {
+                    return NotFound("Ветеринарният лекар не е намерен.");
+                }
+
                 record.ClinicId = _currentClinic.GetRequiredClinicId();
                 _context.MedicalRecords.Add(record);
                 _context.SaveChanges();

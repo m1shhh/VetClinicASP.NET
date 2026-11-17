@@ -69,6 +69,8 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IVaccinationService, VaccinationService>(); // <-- Това добавихме последно
 builder.Services.AddScoped<IOwnerService, OwnerService>();
+// Персонал (Task 8): създаване/деактивиране на служители + линк към Veterinarian профил.
+builder.Services.AddScoped<IStaffService, StaffService>();
 
 // 1.4. Однократен поддръжков инструмент за криптиране на съществуващи данни (Task 6).
 builder.Services.AddScoped<EncryptExistingDataService>();

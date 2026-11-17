@@ -29,7 +29,15 @@ namespace VetClinic.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            _vaccinationService.AddVaccination(model);
+            try
+            {
+                _vaccinationService.AddVaccination(model);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // FK валидация в сервиса (Task 8): чужд/несъществуващ Patient → NotFound.
+                return NotFound(ex.Message);
+            }
 
             return RedirectToAction("Details", "Patients", new { id = model.PatientId });
         }

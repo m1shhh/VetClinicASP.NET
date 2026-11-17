@@ -59,8 +59,16 @@ namespace VetClinic.Controllers
                 return View(model);
             }
 
-            // Запис
-            _patientService.AddPatient(model);
+            try
+            {
+                // Запис
+                _patientService.AddPatient(model);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // FK валидация в сервиса (Task 8): чужд/несъществуващ Owner → NotFound.
+                return NotFound(ex.Message);
+            }
 
             // Връщане към списъка
             return RedirectToAction("Index");

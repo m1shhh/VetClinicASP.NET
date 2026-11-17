@@ -72,7 +72,17 @@ namespace VetClinic.Controllers
                 return View(model);
             }
 
-            _appointmentService.AddAppointment(model);
+            try
+            {
+                _appointmentService.AddAppointment(model);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // FK валидация в сервиса (Task 8): чужд/несъществуващ Patient/Vet → NotFound
+                // (същият стил като MedicalRecordsController.Create от Task 5).
+                return NotFound(ex.Message);
+            }
+
             return RedirectToAction("Index");
         }
 
