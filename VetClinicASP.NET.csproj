@@ -8,12 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- PetCare.Tests е отделен тестов проект; изключи го от root компилацията. -->
+    <!-- PetCare.Tests е отделен тестов проект; изключи го от root компилацията. Без Content/None
+         Remove Web SDK-а глоубва bin/obj файловете им като content → рекурсивно копиране в root bin. -->
     <Compile Remove="PetCare.Tests\**" />
     <EmbeddedResource Remove="PetCare.Tests\**" />
+    <Content Remove="PetCare.Tests\**" />
+    <None Remove="PetCare.Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

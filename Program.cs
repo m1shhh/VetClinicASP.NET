@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using VetClinic.Security;
 using VetClinic.Services;
 using VetClinicASP.NET.Infrastructure;
@@ -29,6 +31,38 @@ builder.Services.AddSingleton<EncryptionService>(_ => new EncryptionService(buil
 // Без тези регистрации AddDbContext не може да конструира context-а с tenant филтрите.
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentClinic, CurrentClinic>();
+
+// 1.3.1. Identity (Task 7): AddIdentityCore (без UI) + роли + EF stores върху VetClinicContext.
+// Стойностите са точно по Global Constraints: пароли мин. 8 с главна/малка/цифра (без изискване
+// за спец. символ); lockout 5 грешни опита → 15 мин; уникален имейл.
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.User.RequireUniqueEmail = true;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<VetClinicContext>()
+.AddSignInManager()
+.AddClaimsPrincipalFactory<ClinicUserClaimsPrincipalFactory>(); // "clinic_id" claim → ICurrentClinic
+
+// 1.3.2. Authentication: бисквитката точно по Global Constraints (PetCare.Auth, HttpOnly,
+// Secure=Always, SameSite=Lax, 8 ч sliding).
+builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
+    .AddCookie(IdentityConstants.ApplicationScheme, o =>
+    {
+        o.Cookie.Name = "PetCare.Auth";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.SlidingExpiration = true;
+        o.ExpireTimeSpan = TimeSpan.FromHours(8);
+    });
 
 // 1.3. Регистриране на твоите Сървиси (Services)
 builder.Services.AddScoped<IPatientService, PatientService>();
@@ -78,6 +112,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Authentication ПРЕДИ Authorization (Task 7): без UseAuthentication HttpContext.User е анонимен
+// дори с валидна бисквитка — и ICurrentClinic би останал без clinic_id claim.
+app.UseAuthentication();
 
 app.UseAuthorization();
 

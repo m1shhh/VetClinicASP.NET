@@ -1,0 +1,75 @@
+@model VetClinic.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Регистрация на клиника";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">🐾 Регистрация на клиника</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Register" method="post">
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="ClinicName" class="form-label"></label>
+                            <input asp-for="ClinicName" class="form-control" placeholder="напр. Ветеренарна клиника Здравец" />
+                            <span asp-validation-for="ClinicName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DisplayName" class="form-label"></label>
+                            <input asp-for="DisplayName" class="form-control" placeholder="Вашето име (за акаунта)" />
+                            <span asp-validation-for="DisplayName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" placeholder="admin@clinic.bg" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" />
+                            <small class="text-muted">Минимум 8 символа, с главна буква, малка буква и цифра.</small>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="border rounded p-3 mb-2 bg-light">
+                            <h5 class="mb-2">Условия за обработка на данни (v1)</h5>
+                            <p class="mb-1"><strong>Оператор на данни:</strong> Мишо — физическо лице (PetCare).</p>
+                            <p class="mb-1"><strong>Хостинг:</strong> Microsoft Azure, регион в ЕС (West Europe). Данните се криптират при запис (AES-256-GCM).</p>
+                            <p class="mb-1"><strong>Категории данни:</strong> стопанин — име, телефон, имейл, адрес; животни — имена, вид, порода, възраст; медицински записи.</p>
+                            <p class="mb-1"><strong>Цел:</strong> водене на ветеринарен софтуер на клиниката (пациенти, прегледи, ваксинации).</p>
+                            <p class="mb-1"><strong>Вашите права:</strong> достъп, корекция и изтриване на данните — чрез вашата клиника. Клиниката може да изиска пълно изтриване на данните ѝ.</p>
+                            <p class="mb-0"><strong>Контакт:</strong> предстои — до тогава връзката е директна с оператора.</p>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="ConsentAccepted" class="form-check-input" type="checkbox" />
+                            <label asp-for="ConsentAccepted" class="form-check-label">
+                                Приемам условията за обработка на данни по-горе.
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Регистрирай клиниката</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

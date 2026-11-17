@@ -88,6 +88,23 @@ public partial class VetClinicContext
             entity.Property(e => e.ConsentTextVersion).HasMaxLength(20);
         });
 
+        // ApplicationUser (Task 7) НЕ е tenant entity — БЕЗ query filter (users не са клинични данни;
+        // Operator има ClinicId=null). FK към Clinic с Restrict: изтриване на клиниката минава през
+        // ErasureService (Task 11), който изтрива потребителите изрично преди Clinic реда.
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(e => e.ClinicId).HasColumnName("ClinicId");
+            entity.Property(e => e.DisplayName).HasMaxLength(100);
+
+            entity.HasOne(d => d.Clinic)
+                .WithMany()
+                .HasForeignKey(d => d.ClinicId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_AspNetUsers_Clinic");
+
+            entity.HasIndex(e => e.ClinicId, "IX_AspNetUsers_ClinicId");
+        });
+
         modelBuilder.Entity<Owner>(entity =>
         {
             entity.Property(e => e.ClinicId).HasColumnName("ClinicID");

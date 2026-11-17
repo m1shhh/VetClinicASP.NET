@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VetClinic.Security;
 
 namespace VetClinicASP.NET.Models;
 
-public partial class VetClinicContext : DbContext
+// Base = IdentityDbContext<ApplicationUser> (Task 7): предоставя DbSet Users/Roles/UserClaims/
+// UserLogins/UserRoles/RoleClaims/UserTokens — НЕ ги обявяваме повторно тук.
+public partial class VetClinicContext : IdentityDbContext<ApplicationUser>
 {
     private readonly int? _currentClinicId;
 
@@ -49,6 +52,10 @@ public partial class VetClinicContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // КРИТИЧНО: първо базата (Identity mappings — Users/Roles/joins). Scaffolded contexts
+        // не викат base.OnModelCreating — без този ред IdentityUserStore-ът гърми по време на работа.
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCA2BEAFEBE4");
