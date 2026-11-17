@@ -1,0 +1,101 @@
+@model List<VetClinic.Services.OperatorClinicRow>
+@{
+    ViewData["Title"] = "Операторски панел";
+}
+
+@functions {
+    /// <summary>Билинговият статус (enum име) → български етикет.</summary>
+    private static string BillingLabel(string billing) => billing switch
+    {
+        "Trial" => "Пробен период",
+        "Active" => "Активен",
+        "PastDue" => "Просрочен",
+        "Suspended" => "Спрян",
+        "Cancelled" => "Прекратен",
+        _ => billing
+    };
+}
+
+<div class="container mt-4">
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Затвори"></button>
+        </div>
+    }
+
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">⚙️ Операторски панел — клиники</h3>
+            <a asp-action="NewClinic" class="btn btn-outline-light btn-sm">➕ Нова пилотна клиника</a>
+        </div>
+        <div class="card-body">
+
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Клиника</th>
+                                <th>Билингов статус</th>
+                                <th>Регистрирана на</th>
+                                <th>Статус</th>
+                                <th class="text-center">Пациенти</th>
+                                <th class="text-center">Записвания</th>
+                                <th class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@row.Name</td>
+                                    <td>@BillingLabel(row.BillingStatus)</td>
+                                    <td>@row.CreatedAtUtc.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        @if (row.IsActive)
+                                        {
+                                            <span class="badge bg-success">Активна</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Деактивирана</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">@row.Patients</td>
+                                    <td class="text-center">@row.Appointments</td>
+                                    <td class="text-end">
+                                        <form asp-action="SetActive" method="post" class="d-inline">
+                                            <input type="hidden" name="clinicId" value="@row.ClinicId" />
+                                            <input type="hidden" name="active" value="@(row.IsActive ? "false" : "true")" />
+                                            @if (row.IsActive)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">🚫 Деактивирай</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-success">✅ Активирай</button>
+                                            }
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">Все още няма регистрирани клиники. Създайте пилотна клиника.</p>
+            }
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-3 mb-0" role="note">
+        ℹ️ Панелът показва <strong>само метаданни</strong> — брой пациенти и записвания. Данните на
+        клиниките (пациенти, стопани, медицински записи) не са достъпни от операторския акаунт.
+    </div>
+</div>

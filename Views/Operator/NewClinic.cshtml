@@ -1,0 +1,60 @@
+@model VetClinic.Models.ViewModels.NewClinicViewModel
+@{
+    ViewData["Title"] = "Нова пилотна клиника";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">➕ Нова пилотна клиника</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Създава клиника (билингов статус „Активен“) и първия ClinicAdmin акаунт.
+                Началната парола се съобщава на администратора лично.
+            </p>
+
+            <form asp-action="NewClinic" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" placeholder="напр. Вет клиника Хепи Пец" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="AdminDisplayName" class="form-label"></label>
+                        <input asp-for="AdminDisplayName" class="form-control" placeholder="напр. Д-р Мира Клинична" />
+                        <span asp-validation-for="AdminDisplayName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="AdminEmail" class="form-label"></label>
+                        <input asp-for="AdminEmail" class="form-control" placeholder="admin@clinic.bg" />
+                        <span asp-validation-for="AdminEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="AdminPassword" class="form-label"></label>
+                        <input asp-for="AdminPassword" class="form-control" />
+                        <small class="text-muted">Минимум 8 символа, с главна буква, малка буква и цифра.</small>
+                        <span asp-validation-for="AdminPassword" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary">Отказ</a>
+                    <button type="submit" class="btn btn-dark">Създай клиника</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

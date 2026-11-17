@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using VetClinic.Security
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -38,6 +39,30 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">🫶Автор</a>
                         </li>
+                        @* Операторски панел (Task 9) — линкът е видим САМО за роля Operator *@
+                        @if (User.IsInRole(AppRoles.Operator))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Operator" asp-action="Index">⚙️ Оператор</a>
+                            </li>
+                        }
+                        @* Персонал (Task 8) — линкът е видим САМО за роля ClinicAdmin *@
+                        @if (User.IsInRole(AppRoles.ClinicAdmin))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="ClinicAdmin" asp-action="Users">👥 Служители</a>
+                            </li>
+                        }
+                        @* Изход (Task 9, бележка (б) от Task 7 ревю): САМО POST форма с antiforgery
+                           токен — GET /Account/Logout вече не съществува *@
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">🚪 Изход</button>
+                                </form>
+                            </li>
+                        }
 
                     </ul>
                 </div>

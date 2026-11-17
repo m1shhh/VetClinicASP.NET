@@ -14,9 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Всички AddScoped и AddDbContext трябва да са ТУК (преди Build)
 // =========================================================
 
-// 1.1. Добавяне на MVC (Контролери и Views)
-builder.Services.AddControllersWithViews();
+// 1.1. Добавяне на MVC (Контролери и Views) + глобален ClinicActiveFilter (Task 9):
+// деактивирана клиника → незабавен SignOut + redirect /Account/Locked при всяка заявка
+// (skip: не-аутентикиран, Operator, /Account/*, без clinic_id claim).
+builder.Services.AddControllersWithViews(o => o.Filters.Add<ClinicActiveFilter>());
 builder.Services.AddScoped<IVeterinarianService, VeterinarianService>();
+// ClinicActiveFilter кешира Clinic.IsActive за 60 s (IMemoryCache — singleton споделен между заявките).
+builder.Services.AddMemoryCache();
 // 1.2. Връзка с SQL Server База данни
 builder.Services.AddDbContext<VetClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -71,9 +75,19 @@ builder.Services.AddScoped<IVaccinationService, VaccinationService>(); // <-- Т
 builder.Services.AddScoped<IOwnerService, OwnerService>();
 // Персонал (Task 8): създаване/деактивиране на служители + линк към Veterinarian профил.
 builder.Services.AddScoped<IStaffService, StaffService>();
+// Операторски панел (Task 9): метаданни-само сервис — агрегати за всички клиники
+// (IgnoreQueryFilters), деактивиране, provisioning. Никакъв API за tenant съдържание.
+builder.Services.AddScoped<IOperatorMetadataService, OperatorMetadataService>();
 
 // 1.4. Однократен поддръжков инструмент за криптиране на съществуващи данни (Task 6).
 builder.Services.AddScoped<EncryptExistingDataService>();
+
+// 1.5. Bootstrap seed (Task 9): роли (idempotent) + Operator акаунт САМО ако
+// Operator:Email + Operator:InitialPassword са конфигурирани; иначе WARNING без crash.
+// Регистриран е ПРЕДИ Build() и ПРЕДИ ранния return на --encrypt-existing, но hosted
+// услуги стартират САМО при app.Run() — runner режимът (Build + return) НИКОГА не ги
+// пуска, затова seed-ът не тича в maintenance прохода.
+builder.Services.AddHostedService<OperatorSeedService>();
 
 // =========================================================
 // 2. ОДНОКРАТЕН РЕЖИМ: --encrypt-existing (Task 6)

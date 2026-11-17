@@ -103,7 +103,20 @@ namespace VetClinic.Controllers
                     return View(model);
                 }
 
-                await _userManager.AddToRoleAsync(user, AppRoles.ClinicAdmin);
+                // Резултатът от AddToRoleAsync НЕ се пренебрегва (Task 9, бележка (а) от
+                // Task 7 ревю): провал → rollback + model error — няма акаунт без роля и
+                // няма "сираче" Clinic ред след него.
+                var roleResult = await _userManager.AddToRoleAsync(user, AppRoles.ClinicAdmin);
+                if (!roleResult.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    foreach (var error in roleResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    return View(model);
+                }
 
                 await transaction.CommitAsync();
             }
@@ -170,11 +183,13 @@ namespace VetClinic.Controllers
         }
 
         // =========================================================
-        // LOGOUT — POST (съгласно плана) + GET за удобство (безопасно:
-        // logout е без разрушителен ефект). Затова НЯМА
-        // [ValidateAntiForgeryToken] — GET не носи токен.
+        // LOGOUT — САМО POST с antiforgery (Task 9, бележка (б) от Task 7 ревю):
+        // GET /Account/Logout повече НЕ съществува — линкът в _Layout е POST форма
+        // с токен. Това е и правилният CSRF хигиенен образ на state-change endpoint.
         // =========================================================
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
