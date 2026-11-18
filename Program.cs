@@ -78,6 +78,9 @@ builder.Services.AddScoped<IStaffService, StaffService>();
 // Операторски панел (Task 9): метаданни-само сервис — агрегати за всички клиники
 // (IgnoreQueryFilters), деактивиране, provisioning. Никакъв API за tenant съдържание.
 builder.Services.AddScoped<IOperatorMetadataService, OperatorMetadataService>();
+// Одитен запис (Task 10): само кодове/Id-та — без PII и без IP. Scoped: пише през СЪЩИЯ
+// scoped VetClinicContext, синхронно с бизнес действието.
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // 1.4. Однократен поддръжков инструмент за криптиране на съществуващи данни (Task 6).
 builder.Services.AddScoped<EncryptExistingDataService>();

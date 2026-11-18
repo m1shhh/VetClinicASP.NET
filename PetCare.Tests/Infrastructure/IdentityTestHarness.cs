@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VetClinic.Security;
+using VetClinic.Services;
 using VetClinic.Controllers;
 using VetClinicASP.NET.Models;
 using Xunit;
@@ -66,6 +67,10 @@ namespace PetCare.Tests.Infrastructure
                 sp.GetRequiredService<ICurrentClinic>(),
                 sp.GetRequiredService<EncryptionService>()));
 
+            // Task 10: одитът пише през СЪЩИЯ scoped context (като в Program.cs) —
+            // тестовете за login потока проверяват и одитните редове.
+            services.AddScoped<IAuditService, AuditService>();
+
             // ТОЧНО същите options като Program.cs (Global Constraints) — тестовете доказват ТЯХ.
             services.AddIdentityCore<ApplicationUser>(options =>
             {
@@ -108,7 +113,8 @@ namespace PetCare.Tests.Infrastructure
                 provider.GetRequiredService<UserManager<ApplicationUser>>(),
                 provider.GetRequiredService<SignInManager<ApplicationUser>>(),
                 provider.GetRequiredService<VetClinicContext>(),
-                configuration);
+                configuration,
+                provider.GetRequiredService<IAuditService>());
 
             return new Harness(controller, provider, configuration);
         }
@@ -124,7 +130,8 @@ namespace PetCare.Tests.Infrastructure
                 Provider.GetRequiredService<UserManager<ApplicationUser>>(),
                 Provider.GetRequiredService<SignInManager<ApplicationUser>>(),
                 Provider.GetRequiredService<VetClinicContext>(),
-                Configuration);
+                Configuration,
+                Provider.GetRequiredService<IAuditService>());
 
             public ValueTask DisposeAsync() => Provider.DisposeAsync();
         }

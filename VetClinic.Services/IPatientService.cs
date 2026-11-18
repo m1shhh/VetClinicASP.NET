@@ -7,7 +7,8 @@ namespace VetClinic.Services
     public interface IPatientService
     {
         IEnumerable<Patient> GetAllPatients(string searchString, string filterType, string sortOrder);
-        void AddPatient(PatientInputModel model);
+        /// <returns>Id на новия пациент (Task 10: нужен е на контролера за одита patient.created).</returns>
+        int AddPatient(PatientInputModel model);
         List<KeyValuePair<string, string>> GetOwnersList();
         PatientDetailsViewModel GetPatientDetails(int id);
 

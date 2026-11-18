@@ -9,6 +9,8 @@ public partial class VetClinicContext
 {
     public virtual DbSet<Clinic> Clinics { get; set; }
 
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
         // ЗАДЪЛЖИТЕЛЕН EncryptionService (fail-fast). Причина: EF кешира ЕДИН модел за тип
@@ -175,6 +177,28 @@ public partial class VetClinicContext
                 .HasConstraintName("FK_Veterinarians_Clinic");
 
             entity.HasIndex(e => e.ClinicId, "IX_Veterinarians_ClinicID");
+        });
+
+        // AuditLog (Task 10): НЕ е tenant entity — БЕЗ query filter (ClinicId може да е null
+        // за операторски действия; IAuditService е единственият записвач). Без FK-та по
+        // замисъл: UserId НЯМА връзка към AspNetUsers.Id, ClinicId — към Clinics.ClinicID —
+        // одитът оцелява при изтриване на потребител/клиника (GDPR erasure, Task 11).
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.AuditId).HasName("PK_AuditLogs");
+
+            // bigint IDENTITY по конвенция (long PK); колоната пази името от заданието.
+            entity.Property(e => e.AuditId).HasColumnName("AuditID");
+            entity.Property(e => e.ClinicId).HasColumnName("ClinicID");
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Entity).HasMaxLength(50);
+            // Същият тип като AspNetUsers.Id (nvarchar(450)) — само съвместимост, без FK.
+            entity.Property(e => e.UserId).HasColumnName("UserId").HasMaxLength(450);
+            entity.Property(e => e.AtUtc).HasColumnType("datetime2");
+
+            // Заявките са по време — глобално и по клиника (Phase 2 операторски изглед).
+            entity.HasIndex(e => e.AtUtc, "IX_AuditLogs_AtUtc");
+            entity.HasIndex(e => new { e.ClinicId, e.AtUtc }, "IX_AuditLogs_ClinicID_AtUtc");
         });
     }
 }

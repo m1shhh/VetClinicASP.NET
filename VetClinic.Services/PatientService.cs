@@ -133,7 +133,7 @@ namespace VetClinic.Services
             return patient;
         }
         // Добавяне
-        public void AddPatient(PatientInputModel model)
+        public int AddPatient(PatientInputModel model)
         {
             var clinicId = _currentClinic.GetRequiredClinicId();
 
@@ -157,6 +157,8 @@ namespace VetClinic.Services
 
             _context.Patients.Add(patient);
             _context.SaveChanges();
+
+            return patient.PatientId;
         }
 
         // Списък собственици

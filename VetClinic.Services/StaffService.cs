@@ -101,9 +101,13 @@ namespace VetClinic.Services
             return IdentityResult.Success;
         }
 
-        public void SetStaffActive(string userId, bool active)
+        public bool SetStaffActive(string userId, bool active)
         {
-            var clinicId = _currentClinic.GetRequiredClinicId();
+            // Deny-by-default: без клиничен контекст няма какво да пипаме — false, без throw.
+            if (_currentClinic.ClinicId is not int clinicId)
+            {
+                return false;
+            }
 
             // ИЗРИЧЕН филтър по клиника: userId от ЧУЖДА клиника → "не е намерен" → тихо
             // не-действие (без throw, без промяна; не разкрива съществуването на чужд акаунт).
@@ -114,11 +118,20 @@ namespace VetClinic.Services
 
             if (user == null)
             {
-                return;
+                return false;
             }
 
             user.IsActive = active;
-            _userManager.UpdateAsync(user).GetAwaiter().GetResult();
+            var updateResult = _userManager.UpdateAsync(user).GetAwaiter().GetResult();
+
+            if (!updateResult.Succeeded)
+            {
+                // Не оставяме tracked промяната да "изтече" при следващ SaveChanges.
+                _context.ChangeTracker.Clear();
+                return false;
+            }
+
+            return true;
         }
 
         public List<ApplicationUser> ListStaff()

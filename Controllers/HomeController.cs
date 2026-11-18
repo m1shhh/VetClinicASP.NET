@@ -11,13 +11,19 @@ namespace VetClinic.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IPatientService _patientService;
         private readonly VetClinicContext _context; 
+        private readonly IAuditService _auditService;
 
         // Обновявен конструктор , за да приема и Context
-        public HomeController(ILogger<HomeController> logger, IPatientService patientService, VetClinicContext context)
+        public HomeController(
+            ILogger<HomeController> logger,
+            IPatientService patientService,
+            VetClinicContext context,
+            IAuditService auditService)
         {
             _logger = logger;
             _patientService = patientService;
             _context = context; // Запазваме го
+            _auditService = auditService;
         }
 
         public IActionResult Index(string searchString, string filterType, string sortOrder)
@@ -80,7 +86,14 @@ namespace VetClinic.Controllers
                 return View("~/Views/Patients/Create.cshtml", model);
             }
 
-            _patientService.AddPatient(model);
+            // ТОВА е РЕАЛНИЯТ потребителски път за "Нов пациент" (бутонът във Views/Home/Index.cshtml
+            // и формата в Views/Patients/Create.cshtml постват към /Home/Create).
+            var patientId = _patientService.AddPatient(model);
+
+            // Одит (Task 10): patient.created и тук — иначе реалният UI поток не оставя одитен
+            // ред (PatientsController.Create е дублиращият път). Само код + Id, без PII.
+            _auditService.Log("patient.created", "Patient", patientId);
+
             return RedirectToAction("Index");
         }
     }

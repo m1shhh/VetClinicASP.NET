@@ -20,11 +20,16 @@ namespace VetClinic.Controllers
     {
         private readonly IStaffService _staffService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IAuditService _auditService;
 
-        public ClinicAdminController(IStaffService staffService, UserManager<ApplicationUser> userManager)
+        public ClinicAdminController(
+            IStaffService staffService,
+            UserManager<ApplicationUser> userManager,
+            IAuditService auditService)
         {
             _staffService = staffService;
             _userManager = userManager;
+            _auditService = auditService;
         }
 
         // GET: Служители — таблица + форма за създаване
@@ -56,6 +61,12 @@ namespace VetClinic.Controllers
                 return View("Users", await BuildUsersViewModel(model));
             }
 
+            // Одит (Task 10): staff.created. entityId е null ПО ЗАМИСЪЛ: UserId колоната носи
+            // АКТОРА (клиничния админ), а самоличността на НОВИЯ служител (имейл/име — PII)
+            // НИКОГА не влиза в одита. Entity "Staff" без id е достатъчно да се проследи
+            // кой админ е създал персонал (същата конвенция като toggle кодовете).
+            _auditService.Log("staff.created", "Staff");
+
             TempData["SuccessMessage"] = $"Служителят {model.Email} беше създаден успешно.";
             return RedirectToAction(nameof(Users));
         }
@@ -70,7 +81,23 @@ namespace VetClinic.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
-                _staffService.SetStaffActive(userId, !user.IsActive);
+                // Посоката се снема ПРЕДИ toggle-а: UserManager-ът и StaffService-ът делят
+                // СЪЩИЯ scoped context, т.е. SetStaffActive мутира същия tracked instance —
+                // след извикването user.IsActive вече е НОВОТО състояние.
+                var wasActive = user.IsActive;
+                var applied = _staffService.SetStaffActive(userId, !wasActive);
+
+                // Одит САМО при реално записана промяна: FindByIdAsync връща потребители от
+                // ВСЯКА клиника (Identity таблиците не са query-филтрирани), а SetStaffActive
+                // тихо игнорира чужд/липсващ user или провален UpdateAsync (false) — без този
+                // guard одитът би твърдял действие, което не се е случило.
+                // entityId null: субектът (имейл/име) е PII — виж коментара в CreateStaff.
+                if (applied)
+                {
+                    _auditService.Log(
+                        wasActive ? "staff.deactivated" : "staff.activated",
+                        "Staff");
+                }
             }
 
             return RedirectToAction(nameof(Users));

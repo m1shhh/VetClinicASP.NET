@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using VetClinic.Models.ViewModels;
 using VetClinic.Security;
+using VetClinic.Services;
 using VetClinicASP.NET.Models;
 
 namespace VetClinic.Controllers
@@ -13,17 +14,20 @@ namespace VetClinic.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly VetClinicContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IAuditService _auditService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             VetClinicContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _configuration = configuration;
+            _auditService = auditService;
         }
 
         // =========================================================
@@ -68,6 +72,7 @@ namespace VetClinic.Controllers
             // Атомарност (план, Task 7): Clinic + ApplicationUser + ролята се записват В ЕДНА
             // транзакция — при неуспешен CreateUser няма останал Clinic ред "сираче".
             ApplicationUser user;
+            int registeredClinicId;
             await using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 var clinic = new Clinic
@@ -81,6 +86,7 @@ namespace VetClinic.Controllers
                 };
                 _context.Clinics.Add(clinic);
                 await _context.SaveChangesAsync();
+                registeredClinicId = clinic.ClinicId;
 
                 user = new ApplicationUser
                 {
@@ -121,6 +127,11 @@ namespace VetClinic.Controllers
                 await transaction.CommitAsync();
             }
 
+            // Одит (Task 10): clinic.registered — entityId е НОВИЯТ ClinicId. ClinicId полето
+            // остава null (регистрантът е анонимен — още няма clinic_id claim). Без PII:
+            // имейлът/името на админа НЕ се записват.
+            _auditService.Log("clinic.registered", "Clinic", registeredClinicId);
+
             // Вход веднага след регистрацията (isPersistent: false — 8 ч бисквитка).
             await _signInManager.SignInAsync(user, isPersistent: false);
 
@@ -150,23 +161,44 @@ namespace VetClinic.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !user.IsActive)
             {
+                // Одит (Task 10): провален опит — САМО код и Entity; имейлът НИКОГА не се
+                // записва (entityId остава null — в него също не влиза имейл).
+                _auditService.Log("login.failed", "User");
+
                 // НИКАКЪВ улчъшение кой от двата случая е — user enumeration защита.
                 ModelState.AddModelError(string.Empty, "Невалидни данни за вход.");
                 return View(model);
             }
 
+            // Преди опита: различаваме "5-ият грешен опит току-що заключи акаунта"
+            // (login.failed + login.locked) от "опит върху вече заключен акаунт" (само
+            // login.locked — паролата не е проверявана, затова няма фалшив login.failed).
+            var wasLockedOut = await _userManager.IsLockedOutAsync(user);
+
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, isPersistent: false, lockoutOnFailure: true);
 
             if (result.Succeeded)
             {
+                // UserId на реда остава null: одитът се пише ПРЕДИ SignInAsync, а
+                // NameIdentifier claim-ът на заявката е още анонимен (без PII: имейл не се пише).
+                _auditService.Log("login.success", "User");
                 return RedirectToAction("Index", "Patients");
             }
 
             if (result.IsLockedOut)
             {
+                if (!wasLockedOut)
+                {
+                    // 5-ият грешен опит: паролата се провали И акаунтът се заключи.
+                    _auditService.Log("login.failed", "User");
+                }
+
+                _auditService.Log("login.locked", "User");
                 return RedirectToAction(nameof(Locked));
             }
 
+            // Грешна парола (акаунтът не е заключен): провал на идентификационните данни.
+            _auditService.Log("login.failed", "User");
             ModelState.AddModelError(string.Empty, "Невалидни данни за вход.");
             return View(model);
         }

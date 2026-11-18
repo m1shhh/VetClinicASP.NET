@@ -282,6 +282,49 @@ namespace VetClinicASP.NET.Migrations
                     b.ToTable("Appointments");
                 });
 
+            modelBuilder.Entity("VetClinicASP.NET.Models.AuditLog", b =>
+                {
+                    b.Property<long>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("AuditID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AuditId"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("AtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ClinicId")
+                        .HasColumnType("int")
+                        .HasColumnName("ClinicID");
+
+                    b.Property<string>("Entity")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("AuditId")
+                        .HasName("PK_AuditLogs");
+
+                    b.HasIndex(new[] { "AtUtc" }, "IX_AuditLogs_AtUtc");
+
+                    b.HasIndex(new[] { "ClinicId", "AtUtc" }, "IX_AuditLogs_ClinicID_AtUtc");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("VetClinicASP.NET.Models.Clinic", b =>
                 {
                     b.Property<int>("ClinicId")

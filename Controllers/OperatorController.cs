@@ -17,10 +17,12 @@ namespace VetClinic.Controllers
     public class OperatorController : Controller
     {
         private readonly IOperatorMetadataService _metadataService;
+        private readonly IAuditService _auditService;
 
-        public OperatorController(IOperatorMetadataService metadataService)
+        public OperatorController(IOperatorMetadataService metadataService, IAuditService auditService)
         {
             _metadataService = metadataService;
+            _auditService = auditService;
         }
 
         // GET: Списък на всички клиники — метаданни + агрегатни брояци (без съдържание)
@@ -36,6 +38,13 @@ namespace VetClinic.Controllers
         public IActionResult SetActive(int clinicId, bool active)
         {
             _metadataService.SetActive(clinicId, active);
+
+            // Одит (Task 10): операторско действие — AuditLog.ClinicId остава NULL (операторът
+            // няма clinic_id claim), а ЦЕЛЕВАТА клиника е в entityId.
+            _auditService.Log(
+                active ? "clinic.activated" : "clinic.deactivated",
+                "Clinic",
+                clinicId);
 
             TempData["SuccessMessage"] = active
                 ? "Клиниката беше активирана."
@@ -65,6 +74,9 @@ namespace VetClinic.Controllers
             {
                 var clinicId = _metadataService.CreatePilotClinic(
                     model.Name, model.AdminEmail, model.AdminDisplayName, model.AdminPassword);
+
+                // Одит (Task 10): clinic.created — новият ClinicId в entityId, без имейл/име (PII).
+                _auditService.Log("clinic.created", "Clinic", clinicId);
 
                 TempData["SuccessMessage"] =
                     $"Клиниката „{model.Name}“ беше създадена успешно с акаунт {model.AdminEmail}.";

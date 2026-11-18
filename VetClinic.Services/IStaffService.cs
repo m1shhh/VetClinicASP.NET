@@ -12,7 +12,13 @@ namespace VetClinic.Services
     {
         IdentityResult CreateStaff(string email, string displayName, string password, string role);
 
-        void SetStaffActive(string userId, bool active);
+        /// <summary>
+        /// Активира/деактивира акаунт САМО в текущата клиника.
+        /// </summary>
+        /// <returns>true само когато промяната е реално записана; false при липсващ
+        /// клиничен контекст, липсващ/чужд user или провален UpdateAsync (одитът в
+        /// контролера зависи от този резултат — не бива фалшив ред).</returns>
+        bool SetStaffActive(string userId, bool active);
 
         List<ApplicationUser> ListStaff();
     }

@@ -9,11 +9,13 @@ namespace VetClinic.Controllers
     public class PatientsController : Controller
     {
         private readonly IPatientService _patientService;
+        private readonly IAuditService _auditService;
 
         // Конструктор: ASP.NET автоматично ще подаде услугата тук
-        public PatientsController(IPatientService patientService)
+        public PatientsController(IPatientService patientService, IAuditService auditService)
         {
             _patientService = patientService;
+            _auditService = auditService;
         }
 
         // GET: Patients
@@ -59,16 +61,21 @@ namespace VetClinic.Controllers
                 return View(model);
             }
 
+            int patientId;
             try
             {
                 // Запис
-                _patientService.AddPatient(model);
+                patientId = _patientService.AddPatient(model);
             }
             catch (InvalidOperationException ex)
             {
                 // FK валидация в сервиса (Task 8): чужд/несъществуващ Owner → NotFound.
                 return NotFound(ex.Message);
             }
+
+            // Одит (Task 10): само код + Id — patient.created (без PII). Извън try-а:
+            // одитът не бива да се превръща в NotFound при собствен провал.
+            _auditService.Log("patient.created", "Patient", patientId);
 
             // Връщане към списъка
             return RedirectToAction("Index");
@@ -137,7 +144,16 @@ namespace VetClinic.Controllers
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int id)
         {
+            // Одит само при РЕАЛНО изтрит ред: липсващ/чужд id между GET потвърждението и
+            // POST-а не бива да ражда фалшив patient.deleted запис.
+            var existed = _patientService.GetPatientDetails(id) != null;
+
             _patientService.DeletePatient(id);
+
+            if (existed)
+            {
+                _auditService.Log("patient.deleted", "Patient", id);
+            }
 
             // Връщаме към началния списък (Home)
             return RedirectToAction("Index", "Home");
