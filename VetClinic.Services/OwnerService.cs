@@ -51,51 +51,26 @@ namespace VetClinic.Services
 
         public void DeleteOwner(int id)
         {
-            var owner = _context.Owners
-                .Include(o => o.Patients)
-                    .ThenInclude(p => p.Appointments)   // Зареждане на часовете
-                .Include(o => o.Patients)
-                    .ThenInclude(p => p.Vaccinations)   // Зареждане на ваксините
-                .Include(o => o.Patients)
-                    .ThenInclude(p => p.MedicalRecords) // Зареждане на мед. картони
-                .FirstOrDefault(o => o.OwnerId == id);
+            var owner = _context.Owners.FirstOrDefault(o => o.OwnerId == id);
 
-            if (owner != null)
+            // Чужд/несъществуващ id → no-op (филтрираният context не вижда чужди стопани).
+            if (owner == null)
             {
-                if (owner.Patients != null && owner.Patients.Any())
-                {
-                    // Обхождаме всяко животно на този собственик
-                    foreach (var patient in owner.Patients)
-                    {
-                        // Изтриване на  часовете
-                        if (patient.Appointments != null && patient.Appointments.Any())
-                        {
-                            _context.Appointments.RemoveRange(patient.Appointments);
-                        }
-
-                        // Изтриване на ваксините
-                        if (patient.Vaccinations != null && patient.Vaccinations.Any())
-                        {
-                            _context.Vaccinations.RemoveRange(patient.Vaccinations);
-                        }
-
-                        // Изтриване на  медицинските записи
-                        if (patient.MedicalRecords != null && patient.MedicalRecords.Any())
-                        {
-                            _context.MedicalRecords.RemoveRange(patient.MedicalRecords);
-                        }
-                    }
-
-                    // След като всички "деца" на животното са изтрити, изтриваме самите животни
-                    _context.Patients.RemoveRange(owner.Patients);
-                }
-
-                // изтриване на собственика
-                _context.Owners.Remove(owner);
-
-                // Запазване на всички промени 
-                _context.SaveChanges();
+                return;
             }
+
+            // GDPR guard (Task 11, design doc §7): стопанин с пациенти НЕ се трие. Старото
+            // поведение каскадно триеше животните с цялата им медицинска история — мълчалива
+            // загуба на данни. Сега потребителят получава обяснение; първо се трият/преместват
+            // пациентите. Проверката е през ФИЛТРИРАНИЯ контекст (текущата клиника).
+            if (_context.Patients.Any(p => p.OwnerId == id))
+            {
+                throw new InvalidOperationException(
+                    "Стопанинът има регистрирани пациенти. Първо изтрийте пациентите му.");
+            }
+
+            _context.Owners.Remove(owner);
+            _context.SaveChanges();
         }
     }
 }

@@ -1,0 +1,66 @@
+@model VetClinic.Models.ViewModels.DeleteClinicViewModel
+
+@{
+    ViewData["Title"] = "Изтриване на клиниката";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🚨 Окончателно изтриване на клиниката</h4>
+                </div>
+                <div class="card-body">
+                    <p class="fw-bold text-danger">
+                        Това действие е ОКОНЧАТЕЛНО и НЕОБРАТИМО. Не съществува начин данните да бъдат възстановени.
+                    </p>
+
+                    <p>Ще бъдат изтрити завинаги:</p>
+                    <ul>
+                        <li>всички пациенти и цялата им медицинска история (прегледи, диагнози, лечения, бележки);</li>
+                        <li>всички ваксинации и всички записвания в графика;</li>
+                        <li>всички стопани (клиенти) и личните им данни (име, телефон, имейл, адрес);</li>
+                        <li>всички ветеринарни профили и всички служебни акаунти на клиниката.</li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <strong>Одитен запис:</strong> в одитния журнал остава само един ред
+                        <code>clinic.deleted</code> с идентификатора на клиниката — без имена,
+                        телефони, имейли или медицинско съдържание. Той е нужен, за да е
+                        проследимо кога и от кого е извършено изтриването.
+                    </div>
+
+                    <p>
+                        Ако искате да продължите, въведете ТОЧНО името на клиниката:
+                        <strong class="text-danger">@Model.ClinicName</strong>
+                    </p>
+
+                    <form asp-action="DeleteClinic" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Confirmation" class="form-label"></label>
+                            <input asp-for="Confirmation" class="form-control" autocomplete="off"
+                                   placeholder="Въведете името точно както е показано по-горе" />
+                            <span asp-validation-for="Confirmation" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Users" class="btn btn-secondary btn-lg">Отказ</a>
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                🗑 Изтрий клиниката завинаги
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

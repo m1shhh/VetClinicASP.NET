@@ -138,8 +138,41 @@ namespace VetClinic.Services
 
             if (appointment != null)
             {
+                // FK валидация през ФИЛТРИРАНИЯ контекст (Task 11 — деферъл от Task 8 ревю):
+                // същият модел като AddAppointment. Проверките са ПРЕДИ присвояванията —
+                // при отказ редът остава непроменен.
+                if (_context.Patients.Find(model.PatientId) == null)
+                {
+                    throw new InvalidOperationException("Пациентът не е намерен.");
+                }
+
+                int vetId;
+                if (_currentClinic.VetProfileId.HasValue)
+                {
+                    // Self-приписване и при редакция: ветеринарният лекар не може да
+                    // прехвърли записа на друг профил — подаденият от формата VetId се
+                    // ИГНОРИРА. Claim-ът е от аутентикацията; филтрираната проверка хваща
+                    // остарял/избит профил.
+                    vetId = _currentClinic.VetProfileId.Value;
+                    if (_context.Veterinarians.Find(vetId) == null)
+                    {
+                        throw new InvalidOperationException("Ветеринарният лекар не е намерен.");
+                    }
+                }
+                else
+                {
+                    // Receptionist/ClinicAdmin подава VetId изрично — валиден САМО сред
+                    // клиниката (чужд/несъществуващ → throw).
+                    if (_context.Veterinarians.Find(model.VeterinarianId) == null)
+                    {
+                        throw new InvalidOperationException("Ветеринарният лекар не е намерен.");
+                    }
+
+                    vetId = model.VeterinarianId;
+                }
+
                 appointment.PatientId = model.PatientId;
-                appointment.VetId = model.VeterinarianId;
+                appointment.VetId = vetId;
                 appointment.Reason = model.Reason;
                 appointment.DurationMinutes = model.DurationMinutes;
                 appointment.AppointmentDate = DateOnly.FromDateTime(model.DateTime);

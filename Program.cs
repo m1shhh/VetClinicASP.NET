@@ -81,6 +81,9 @@ builder.Services.AddScoped<IOperatorMetadataService, OperatorMetadataService>();
 // Одитен запис (Task 10): само кодове/Id-та — без PII и без IP. Scoped: пише през СЪЩИЯ
 // scoped VetClinicContext, синхронно с бизнес действието.
 builder.Services.AddScoped<IAuditService, AuditService>();
+// GDPR erasure (Task 11): fan-out в ЕДНА транзакция + `clinic.deleted` вътре в нея
+// (fail-closed за destructive операцията). Ползва същия scoped context.
+builder.Services.AddScoped<IErasureService, ErasureService>();
 
 // 1.4. Однократен поддръжков инструмент за криптиране на съществуващи данни (Task 6).
 builder.Services.AddScoped<EncryptExistingDataService>();

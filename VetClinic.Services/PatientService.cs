@@ -193,6 +193,14 @@ namespace VetClinic.Services
             var patient = _context.Patients.Find(model.Id);
             if (patient != null)
             {
+                // FK валидация през ФИЛТРИРАНИЯ контекст (Task 11 — деферъл от Task 8 ревю):
+                // същият модел като AddPatient. Чужд/несъществуващ OwnerId → throw; редът
+                // остава непроменен (валидацията е ПРЕДИ всяко присвояване).
+                if (_context.Owners.Find(model.OwnerId) == null)
+                {
+                    throw new InvalidOperationException("Стопанинът не е намерен.");
+                }
+
                 patient.Name = model.Name;
                 patient.Species = model.Species;
                 patient.Breed = model.Breed;

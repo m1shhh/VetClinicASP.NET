@@ -52,4 +52,17 @@ namespace VetClinic.Models.ViewModels
         [Display(Name = "Роля")]
         public string Role { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// Потвърждение за GDPR изтриване на клиниката (Task 11). <see cref="ClinicName"/> е
+    /// САМО за показване — истинското сравнение е срещу текущото име от DB; стойността от
+    /// формата никога не се приема за истина.
+    /// </summary>
+    public class DeleteClinicViewModel
+    {
+        public string ClinicName { get; set; } = string.Empty;
+
+        [Display(Name = "Име на клиниката")]
+        public string Confirmation { get; set; } = string.Empty;
+    }
 }

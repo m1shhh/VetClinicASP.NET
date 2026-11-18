@@ -183,6 +183,8 @@ PetCare/
 
 ### Task 9: Операторски панел + bootstrap seed + IsActive enforcement
 
+> **Разширение (17.11, от Task 7 ревю, отложено тук):** (а) при seed-ването на ролите — idempotent guard при стартиране + AccountController.Register проверява `AddToRoleAsync` резултата (rollback + model error при провал); (б) Logout → само POST с antiforgery (GET/logout линковете идват от _Layout в тази задача); (в) тест, assert-ващ самия `clinic_id` claim в principal-а след sign-in.
+
 **Files:** Create `VetClinic.Services/IOperatorMetadataService.cs`/`OperatorMetadataService.cs`, `Controllers/OperatorController.cs`, `Views/Operator/{Index,NewClinic}.cshtml`, `VetClinic.Security/ClinicActiveFilter.cs`, `Infrastructure/OperatorSeedService.cs` (IHostedService); Modify `Program.cs` (filter + seed + metadata DI); Modify `Views/Shared/_Layout.cshtml` (условни линкове: Operator → панел; ClinicAdmin → Служители); Test `OperatorPanelTests.cs`, `ClinicActiveEnforcementTests.cs`.
 
 **Interfaces:** `OperatorMetadataService` (всички заявки `IgnoreQueryFilters()`, агрегати САМО): `List<OperatorClinicRow> GetClinics()` — `record OperatorClinicRow(int ClinicId, string Name, string BillingStatus, DateTime CreatedAtUtc, bool IsActive, int Patients, int Appointments)`; `void SetActive(int clinicId, bool active)`; `int CreatePilotClinic(string name, string adminEmail, string adminDisplayName, string adminPassword)` (Clinic BillingStatus=Active + ClinicAdmin user). `OperatorSeedService`: на старт, ако няма Operator user и `Operator:Email`+`Operator:InitialPassword` са конфигурирани → създава; липсват → warning в лог, НЕ crash. `ClinicActiveFilter` (IAsyncAuthorizationFilter, global): skip ако не-аутентикиран, роля Operator, или пътят е `/Account/*`; иначе — Clinic.IsActive от `IMemoryCache` (60 s); false → `SignOutAsync` + redirect `/Account/Locked`.
@@ -201,6 +203,10 @@ PetCare/
 
 ### Task 11: ErasureService + блокирани изтривания на стопанин
 
+> **Разширение (17.11, от Task 8 ревю, отложено тук):** Update пътищата с променени FK валидират през ФИЛТРИРАНИЯ контекст (същият модел като create): `PatientService.UpdatePatient` (OwnerId), `AppointmentService.UpdateAppointment` (PatientId/VetId), `MedicalRecordsController.Edit` (VetId + self-assignment за Vet потребител). Също: блокирай/разлинквай изтриване на Veterinarian, свързан с user (AspNetUsers.VeterinarianId няма DB FK — stale линк до re-login).
+>
+> **Разширение (18.11, от Task 10 ревю):** ErasureService пише `clinic.deleted` ВЪТРЕ в транзакцията — уточни политиката за audit провал: (а) `Entity` също се truncate-ва до 50 (днес само `Action`), (б) решение fail-open (audit грешка се логва, бизнес операцията продължава) vs fail-closed (цялата транзакция се връща) — за erasure fail-closed е приемливо, за create-пътища не; документирай в `AuditService`.
+
 **Files:** Create `VetClinic.Services/IErasureService.cs`/`ErasureService.cs`; Modify `ClinicAdminController` (DeleteClinic GET/POST — двойно потвърждение: въвежда се име на клиниката; след успех → SignOut), `VetClinic.Services/OwnerService.cs` (DeleteOwner → block, ако има пациенти); Test `ErasureServiceTests.cs`.
 
 **Interfaces:** `IErasureService { void EraseClinic(int clinicId); }` — `IgnoreQueryFilters()` + изрично `Where(ClinicId == clinicId)`, в транзакция, ред: Vaccinations → MedicalRecords → Appointments → Patients → Owners → Veterinarians → ApplicationUser(s)+Identity joins → Clinic; записва audit `clinic.deleted` (ClinicId остава, без съдържание); idempotent (повторно = no-op). OwnerService.DeleteOwner: `_context.Patients.Any(p => p.OwnerId == id)` → `throw new InvalidOperationException("Стопанинът има регистрирани пациенти. Първо изтрийте пациентите му.");`
@@ -209,6 +215,8 @@ PetCare/
 - [ ] **Step 2–4:** verify fail → имплементация → verify pass. **Step 5:** Commit: `feat(gdpr): clinic erasure fan-out; block owner deletion with patients`.
 
 ### Task 12: Headers/CSP/HSTS + rate limiting + ForwardedHeaders
+
+> **Разширение (18.11, от Task 10 ревю):** `AccountController.Register` не забранява на вече аутентикиран user да POST-не регистрация — такъв POST би взел стария `clinic_id` claim и би записал `clinic.registered` с грешна ClinicId. Добави guard (анонимен само) или explicit null при логването.
 
 **Files:** Modify `Program.cs`; Test `SecurityHeadersTests.cs`, `RateLimitForwardedHeadersTests.cs`.
 
@@ -251,6 +259,12 @@ jobs:
 ```
 
 - [ ] **Step 1:** workflow файл. **Step 2 (verify локално):** `dotnet test PetCare.Tests -v n` → всичко зелено. **Step 3:** Провери списъка на критериите от design doc §10 (изолация, оператор-отказ, сурови криптирани колони, lockout, headers, erasure-нула реда) — всеки е покрит от тест. **Step 4:** Commit: `ci: build + SQL Server-backed test run`.
+
+> **Разширение (18.11, от Task 10 ревю — whole-branch notes):**
+> - Липсващи audit тестове: OperatorController (`clinic.activated/deactivated/created`), `clinic.registered`, login на деактивиран акаунт, negative `patient.deleted` (несъществуващ/чужд id).
+> - PII тестът да сканира ВСИЧКИ нови редове (`Assert.All`), не само един login.failed ред; включи seeded DisplayName и реалната тестова парола.
+> - `patient.deleted` race: existence check и `DeletePatient` са отделни операции — `bool DeletePatient` би бил точен; логвай само при реален delete.
+> - Бъдещ tenant-facing audit read ЗАДЪЛЖИТЕЛНО филтрира по ClinicId (днес няма read API — AuditLogs не е tenant entity); иначе метаданни на други клиники изтичат.
 
 ---
 

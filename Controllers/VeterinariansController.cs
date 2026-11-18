@@ -8,10 +8,12 @@ namespace VetClinic.Controllers
     public class VeterinariansController : Controller
     {
         private readonly IVeterinarianService _vetService;
+        private readonly VetClinicContext _context;
 
-        public VeterinariansController(IVeterinarianService vetService)
+        public VeterinariansController(IVeterinarianService vetService, VetClinicContext context)
         {
             _vetService = vetService;
+            _context = context;
         }
 
         // Списък с лекари
@@ -63,9 +65,7 @@ namespace VetClinic.Controllers
             }
             return View(vet);
         }
-        [HttpGet]
-        [HttpGet]
-        // Зареждане на страницата за потвърждение 
+        // Зареждане на страницата за потвърждение
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -80,6 +80,24 @@ namespace VetClinic.Controllers
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int VetId)
         {
+            // Ownership през ФИЛТРИРАНИЯ контекст: чужд/несъществуващ VetId → no-op.
+            var vet = _vetService.GetVeterinarianById(VetId);
+            if (vet == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            // Guard (Task 11 — деферъл от Task 8 ревю): ApplicationUser.VeterinarianId няма
+            // DB FK, т.е. изтриването на профила би оставило служебния акаунт със stale линк.
+            // Затова профил, свързан с (какъвто и да е) акаунт, НЕ се трие — ясно съобщение.
+            if (_context.Users.Any(u => u.VeterinarianId == VetId))
+            {
+                TempData["ErrorMessage"] =
+                    "Ветеринарният профил е свързан със служебен акаунт и не може да бъде изтрит.";
+
+                return RedirectToAction("Index");
+            }
+
             _vetService.DeleteVeterinarian(VetId);
             return RedirectToAction("Index");
         }

@@ -53,7 +53,17 @@ namespace VetClinic.Controllers
         [HttpPost, ActionName("Delete")]
         public IActionResult DeleteConfirmed(int OwnerId)
         {
-            _ownerService.DeleteOwner(OwnerId);
+            try
+            {
+                _ownerService.DeleteOwner(OwnerId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // GDPR guard (Task 11): стопанин с пациенти не се трие. Грешката е
+                // user-visible на Index екрана (TempData) — БЕЗ 500 и без частично изтриване.
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
             return RedirectToAction("Index");
         }
         // GET: Отваря формата за редакция с попълнени данни

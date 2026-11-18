@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using VetClinic.Models.ViewModels;
 using VetClinic.Security;
 using VetClinic.Services;
@@ -14,6 +16,9 @@ namespace VetClinic.Controllers
     /// служители (вкл. още ClinicAdmin-и — клиниката не бива да остава без админ).
     /// Изолацията е в IStaffService (изрични ClinicId филтри — Identity таблиците нямат
     /// query filter). Route: конвенция като останалите контролери ({controller}/{action}).
+    ///
+    /// Task 11: DeleteClinic (GDPR erasure) — двойно потвърждение с точно въведено име;
+    /// clinicId идва САМО от ICurrentClinic, никога от формата.
     /// </summary>
     [Authorize(Roles = AppRoles.ClinicAdmin)]
     public class ClinicAdminController : Controller
@@ -21,15 +26,27 @@ namespace VetClinic.Controllers
         private readonly IStaffService _staffService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAuditService _auditService;
+        private readonly IErasureService _erasureService;
+        private readonly ICurrentClinic _currentClinic;
+        private readonly VetClinicContext _context;
+        private readonly ILogger<ClinicAdminController> _logger;
 
         public ClinicAdminController(
             IStaffService staffService,
             UserManager<ApplicationUser> userManager,
-            IAuditService auditService)
+            IAuditService auditService,
+            IErasureService erasureService,
+            ICurrentClinic currentClinic,
+            VetClinicContext context,
+            ILogger<ClinicAdminController> logger)
         {
             _staffService = staffService;
             _userManager = userManager;
             _auditService = auditService;
+            _erasureService = erasureService;
+            _currentClinic = currentClinic;
+            _context = context;
+            _logger = logger;
         }
 
         // GET: Служители — таблица + форма за създаване
@@ -101,6 +118,89 @@ namespace VetClinic.Controllers
             }
 
             return RedirectToAction(nameof(Users));
+        }
+
+        // =========================================================
+        // DELETE CLINIC — GDPR erasure (Task 11, design doc §7)
+        // Двойно потвърждение: администраторът въвежда ТОЧНО името на клиниката.
+        // ClinicId идва САМО от ICurrentClinic (claim) — никога от формата.
+        // =========================================================
+
+        [HttpGet]
+        public IActionResult DeleteClinic()
+        {
+            var clinic = CurrentClinicOrNull();
+            if (clinic == null)
+            {
+                return NotFound();
+            }
+
+            return View(new DeleteClinicViewModel { ClinicName = clinic.Name });
+        }
+
+        [HttpPost, ActionName("DeleteClinic")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteClinicConfirmed(string? confirmation)
+        {
+            // Ролята се проверява автоматично от [Authorize(Roles = ClinicAdmin)] на класа.
+            // Клиниката се презарежда от DB и се сравнява с ТЕКУЩОТО ѝ име — подаденото от
+            // формата име на клиника не се приема за истина.
+            var clinic = CurrentClinicOrNull();
+            if (clinic == null)
+            {
+                return NotFound();
+            }
+
+            var model = new DeleteClinicViewModel
+            {
+                ClinicName = clinic.Name,
+                Confirmation = confirmation ?? string.Empty
+            };
+
+            if (!string.Equals(confirmation, clinic.Name, StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(
+                    nameof(DeleteClinicViewModel.Confirmation),
+                    "Въведеното име не съвпада точно с името на клиниката. Изтриването не беше извършено.");
+
+                return View("DeleteClinic", model);
+            }
+
+            try
+            {
+                // Fan-out + одит в ЕДНА транзакция (fail-closed) — вж. ErasureService.
+                _erasureService.EraseClinic(clinic.ClinicId);
+            }
+            catch (Exception ex)
+            {
+                // Без PII в лога (само ClinicId). Не оставяме tracked Deleted Clinic ред в
+                // контекста след rollback-а — следващ SaveChanges не бива да го изпълни пак.
+                _logger.LogError(ex, "Изтриването на клиника {ClinicId} се провали.", clinic.ClinicId);
+                _context.ChangeTracker.Clear();
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Изтриването не беше извършено поради техническа грешка. Опитайте отново или се свържете с поддръжката.");
+
+                return View("DeleteClinic", model);
+            }
+
+            // Акаунтите на клиниката вече не съществуват — изчистваме бисквитката и
+            // отвеждаме към заключения екран (същата UX като деактивирана клиника).
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+
+            return RedirectToAction("Locked", "Account");
+        }
+
+        /// <summary>Текущата клиника от claim-а (null при липсващ контекст/изтрит ред).</summary>
+        private Clinic? CurrentClinicOrNull()
+        {
+            if (_currentClinic.ClinicId is not int clinicId)
+            {
+                return null;
+            }
+
+            return _context.Clinics.FirstOrDefault(c => c.ClinicId == clinicId);
         }
 
         // Помощен метод: таблица + ролеви dropdown + входната форма (със запазени стойности при грешка)

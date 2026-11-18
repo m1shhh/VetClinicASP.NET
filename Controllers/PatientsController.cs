@@ -121,7 +121,16 @@ namespace VetClinic.Controllers
                 return View(model);
             }
 
-            _patientService.UpdatePatient(model);
+            try
+            {
+                _patientService.UpdatePatient(model);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // FK валидация в сервиса (Task 11): чужд/несъществуващ Owner → NotFound
+                // (същият стил като Create POST; БЕЗ 500).
+                return NotFound(ex.Message);
+            }
 
             return RedirectToAction("Details", new { id = model.Id });
         }

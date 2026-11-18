@@ -326,13 +326,22 @@ namespace PetCare.Tests
             var clinicId = await SeedClinicAsync();
 
             await using var harness = await StaffTestHarness.BuildAsync(_fixture, clinicId);
+            var currentClinic = new TestClinicContext(clinicId);
             var controller = new ClinicAdminController(
                 harness.StaffService,
                 harness.UserManager,
                 new AuditService(
                     harness.Context,
-                    new TestClinicContext(clinicId),
-                    AccessorWithUser("admin-user-1")));
+                    currentClinic,
+                    AccessorWithUser("admin-user-1")),
+                new ErasureService(
+                    harness.Context,
+                    currentClinic,
+                    AccessorWithUser("admin-user-1"),
+                    NullLogger<ErasureService>.Instance),
+                currentClinic,
+                harness.Context,
+                NullLogger<ClinicAdminController>.Instance);
 
             // Bare контролер (без MVC pipeline) — TempData идва от реален provider,
             // за да не гърми CreateStaff на TempData[...] (действието не се променя).
@@ -399,13 +408,22 @@ namespace PetCare.Tests
             // Контролер на клиника Б с userId от клиника А: FindByIdAsync го намира
             // (Identity таблиците не са tenant-филтрирани), но SetStaffActive е no-op.
             await using var harnessB = await StaffTestHarness.BuildAsync(_fixture, clinicBId);
+            var currentClinicB = new TestClinicContext(clinicBId);
             var controllerB = new ClinicAdminController(
                 harnessB.StaffService,
                 harnessB.UserManager,
                 new AuditService(
                     harnessB.Context,
-                    new TestClinicContext(clinicBId),
-                    AccessorWithUser("admin-b")));
+                    currentClinicB,
+                    AccessorWithUser("admin-b")),
+                new ErasureService(
+                    harnessB.Context,
+                    currentClinicB,
+                    AccessorWithUser("admin-b"),
+                    NullLogger<ErasureService>.Instance),
+                currentClinicB,
+                harnessB.Context,
+                NullLogger<ClinicAdminController>.Instance);
 
             var sinceId = await MaxAuditIdAsync();
             var result = await controllerB.ToggleActive(userA!.Id);
@@ -442,6 +460,28 @@ namespace PetCare.Tests
         }
 
         // =========================================================
+        // Test 6a: entity > 50 знака → ТРУНКВАНЕ до 50 (Task 11, бележка (а) от
+        // Task 10 ревю — днес се truncate-ваше само Action)
+        // =========================================================
+
+        [Fact]
+        public async Task Log_EntityOver50Chars_TruncatedWithoutException()
+        {
+            var sinceId = await MaxAuditIdAsync();
+            var currentClinic = new TestClinicContext(10);
+
+            await using var context = _fixture.CreateContext(currentClinic);
+
+            new AuditService(context, currentClinic, AnonymousAccessor())
+                .Log("patient.created", new string('e', 80), 1);
+
+            var row = Assert.Single(await NewRowsAsync(sinceId));
+            Assert.NotNull(row.Entity);
+            Assert.Equal(50, row.Entity!.Length);
+            Assert.Equal(new string('e', 50), row.Entity);
+        }
+
+        // =========================================================
         // Test 6b: празен/whitespace action → fail-fast (ArgumentException)
         // =========================================================
 
@@ -461,7 +501,6 @@ namespace PetCare.Tests
         // Test 7: AuditLog НЕ е tenant филтриран — и raw (null), и tenant
         // контекст четат ВСИЧКИ редове (вкл. ClinicId NULL и чужда клиника)
         // =========================================================
-
         [Fact]
         public async Task AuditLog_NotTenantFiltered_ReadableFromRawAndTenantContexts()
         {
@@ -491,6 +530,24 @@ namespace PetCare.Tests
             // — само суров контекст/IAuditService за писане).
             await using var tenantRead = _fixture.CreateContext(currentClinic);
             Assert.Equal(2, await tenantRead.AuditLogs.CountAsync(a => a.AuditId > sinceId));
+        }
+
+        // =========================================================
+        // Test 8: DB грешка при одит → FAIL-OPEN (без изключение към бизнес
+        // операцията). Destructive erasure е отделният fail-closed случай —
+        // там одитът се пише в транзакцията на ErasureService (Task 11).
+        // =========================================================
+
+        [Fact]
+        public void Log_DatabaseFailure_DoesNotThrow()
+        {
+            var currentClinic = new TestClinicContext(10);
+            var context = _fixture.CreateContext(currentClinic);
+            context.Dispose(); // всяка заявка към мъртъв context → ObjectDisposedException
+
+            // Никакво изключение — одитът не бива да проваля успешна бизнес операция.
+            new AuditService(context, currentClinic, AnonymousAccessor())
+                .Log("patient.created", "Patient", 1);
         }
 
         // =========================================================

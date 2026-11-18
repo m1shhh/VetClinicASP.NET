@@ -132,11 +132,40 @@ namespace VetClinic.Controllers
                     return NotFound("Картонът не е намерен.");
                 }
 
+                // VetId при редакция (Task 11 — деферъл от Task 8 ревю): същият модел като
+                // Create. За Vet потребител профилът се форсира към СОБСТВЕНИЯ — подаденият
+                // от формата VetId се ИГНОРИРА (fail-closed срещу приписване на чужд лекар).
+                // За служебен персонал VetId се валидира през ФИЛТРИРАНИЯ контекст.
+                int? vetId;
+                if (_currentClinic.VetProfileId.HasValue)
+                {
+                    var selfVet = _context.Veterinarians.Find(_currentClinic.VetProfileId.Value);
+                    if (selfVet == null)
+                    {
+                        return NotFound("Ветеринарният лекар не е намерен.");
+                    }
+
+                    vetId = selfVet.VetId;
+                }
+                else if (record.VetId.HasValue)
+                {
+                    if (_context.Veterinarians.Find(record.VetId.Value) == null)
+                    {
+                        return NotFound("Ветеринарният лекар не е намерен.");
+                    }
+
+                    vetId = record.VetId.Value;
+                }
+                else
+                {
+                    vetId = null;
+                }
+
                 existing.Diagnosis  = record.Diagnosis;
                 existing.Treatment  = record.Treatment;
                 existing.Notes      = record.Notes;
                 existing.RecordDate = record.RecordDate;
-                existing.VetId      = record.VetId;
+                existing.VetId      = vetId;
                 // ClinicId/PatientId остават непокътнати — query filter-ът пази само четения.
                 _context.SaveChanges();
 
