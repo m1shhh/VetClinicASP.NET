@@ -274,6 +274,25 @@ jobs:
 > - `IClinicDirectory` вместо нефилтриран `VetClinicContext` в ClinicAdminController (по избор, козметично).
 > - **[Authorize] ролева матрица (design §5)** за старите контролери (Owners/Patients/Veterinarians/Appointments/MedicalRecords): само ClinicAdmin трие пациенти; само ClinicAdmin/Vet пише мед. записи — днес липсва (pre-existing, tenant изолацията държи).
 > - Pre-existing: изтриване на unlinked vet с история → NO ACTION FK → `DbUpdateException` 500 (`VeterinarianService`) — guard или graceful error преди пилота.
+>
+> **Разширение (19.11, от Task 12 ревю — whole-branch notes):**
+> - Headers на handled 500 страници: `ExceptionHandler` прави `Response.Clear()` → сложи headers през `Response.OnStarting(...)` (оцелява Clear); в момента 500 страницата е без CSP/XFO/nosniff.
+> - `ReverseProxy:KnownProxies/KnownNetworks` warning-ът е подвеждащ — секциите не се bind-ват (винаги всички proxy-та са доверени). Или ги bind-ни, или махни споменаването; документирай deployment assumption (само зад Azure edge) в appsettings/README.
+> - Непоследователен predicate: headers под `IsProduction()`, HSTS под `!IsDevelopment()` — при Staging има HSTS без CSP; изравни или документирай.
+> - `SuppressXFrameOptionsHeader = true` е глобален → в Development няма никакъв XFO (съзнателен trade-off, по план headers са production-only).
+> - Тестови засилвания: първите 10 rate-limit заявки да assert-ват `== 400` (не само `!= 429`); интеграционен Register-guard тест през реалния cookie pipeline; `Retry-After` на 429 (nice-to-have).
+>
+> **Разширение (19.11, от Task 13 ревю — privacy notes, преди пилот):**
+> - Права: добави ограничаване на обработката, преносимост, възражение, жалба до КЗЛД (чл. 13(2) GDPR) + изрично правно основание.
+> - Категории данни: добави вет./служебен профил (телефон, специалност) и причина за преглед.
+> - „Одитни метаданни без лични данни“ → „без пряка самоличност (псевдонимни идентификатори)“.
+> - Retention: деактивирането НЕ трие данни — формулирай „докато клиниката съществува; изтриване при поискано пълно изтриване“.
+> - Път за оттегляне/изтриване: уточни последователността (клиниката трие преди деактивация; деактивирана клиника не може да влезе).
+> - „При съществена промяна → ново съгласие“ не се налага от код — ръчен процес/TODO.
+> - „Фаза 4“ → „бъдеща версия“; дублираното „оператор на...“; footer „Privacy“ → „Поверителност“.
+> - Guard vs page: при зададен Contact:Email страницата още казва „предстои“ — рендерирай имейла или обнови warning-а.
+> - Тестове: privacy page да assert-ва „v1“/„физическо лице“/„пълно изтриване“; guard whitespace-only email.
+> - Legal sanity (за юрист преди реален пилот): consent като „необходимо условие“ е риск по чл. 7(4) GDPR — обсъди договорно основание; ролята на клиниката (контролер/обработващ) да е изрична.
 
 ---
 

@@ -50,7 +50,7 @@
                         <div class="border rounded p-3 mb-2 bg-light">
                             <h5 class="mb-2">Условия за обработка на данни (v1)</h5>
                             <p class="mb-1"><strong>Оператор на данни:</strong> Мишо — физическо лице (PetCare).</p>
-                            <p class="mb-1"><strong>Хостинг:</strong> Microsoft Azure, регион в ЕС (West Europe). Данните се криптират при запис (AES-256-GCM).</p>
+                            <p class="mb-1"><strong>Хостинг:</strong> Microsoft Azure, регион в ЕС (West Europe). Чувствителните полета (данни на стопаните, причини за прегледи, медицински записи) се криптират при запис (AES-256-GCM).</p>
                             <p class="mb-1"><strong>Категории данни:</strong> стопанин — име, телефон, имейл, адрес; животни — имена, вид, порода, възраст; медицински записи.</p>
                             <p class="mb-1"><strong>Цел:</strong> водене на ветеринарен софтуер на клиниката (пациенти, прегледи, ваксинации).</p>
                             <p class="mb-1"><strong>Вашите права:</strong> достъп, корекция и изтриване на данните — чрез вашата клиника. Клиниката може да изиска пълно изтриване на данните ѝ.</p>
@@ -60,7 +60,8 @@
                         <div class="form-check mb-3">
                             <input asp-for="ConsentAccepted" class="form-check-input" type="checkbox" />
                             <label asp-for="ConsentAccepted" class="form-check-label">
-                                Приемам условията за обработка на данни по-горе.
+                                Приемам условията за обработка на данни (v1) — пълният текст:
+                                <a asp-controller="Home" asp-action="Privacy" target="_blank" rel="noopener">Политика за поверителност</a>
                             </label>
                         </div>
 

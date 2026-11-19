@@ -245,6 +245,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 // .WithStaticAssets(); // Можеш да го махнеш, ако дава грешка, но в .NET 9 е ОК.
 
+// 4.4. Privacy TODO-guard (Task 13): публичната регистрация изисква публичен контакт.
+// Докато Contact:Email не е конфигуриран (решение на собственика — по-късно), включването
+// на Features:PublicRegistration само логва WARNING — стартът НЕ се блокира.
+PrivacyConfigurationGuard.Check(app.Configuration, app.Logger);
+
 app.Run();
 
 // WebApplicationFactory<Program> (Task 12 тестове) изисква публичен тип за entry point-а
