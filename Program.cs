@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 using VetClinic.Security;
 using VetClinic.Services;
 using VetClinicASP.NET.Infrastructure;
@@ -95,6 +98,51 @@ builder.Services.AddScoped<EncryptExistingDataService>();
 // пуска, затова seed-ът не тича в maintenance прохода.
 builder.Services.AddHostedService<OperatorSeedService>();
 
+// 1.6. Login rate limit (Task 12, Global Constraints: 10/мин на IP → HTTP 429).
+// Вградените middleware-и на .NET: fixed window, partition по клиентски IP.
+// Политиката "login" се прилага САМО към POST Account/Login чрез [EnableRateLimiting].
+// Ключът е "unknown" при липсващ RemoteIpAddress (напр. TestServer без forwarded headers) —
+// всички такива заявки делят един bucket, което е безопасната посока.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
+
+// 1.7. ForwardedHeaders (Task 12, Global Constraints: САМО при ReverseProxy:Enabled=true).
+// Зад Azure reverse proxy Connection.RemoteIpAddress е IP-то на proxy-то — без това
+// всички клиенти падат в ЕДИН rate-limit bucket (Review Focus #5). KnownNetworks/
+// KnownProxies се изчистват (proxy-то е доверено, мрежата на Azure не е фиксирана) —
+// същият подход като AzITi. По подразбиране (dev) ключът липсва → middleware-ът НЕ се пуска.
+var reverseProxyEnabled = string.Equals(
+    builder.Configuration["ReverseProxy:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
+
+if (reverseProxyEnabled)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+
+// 1.8. Antiforgery X-Frame-Options: по подразбиране ASP.NET слага SAMEORIGIN при
+// генериране на antiforgery token (form tag helper) — това би презаписало нашия
+// X-Frame-Options: DENY в production. Заглавката е наша отговорност (Task 12):
+// production → DENY; development → умишлено липсва (headers само в production).
+builder.Services.AddAntiforgery(options => options.SuppressXFrameOptionsHeader = true);
+
 // =========================================================
 // 2. ОДНОКРАТЕН РЕЖИМ: --encrypt-existing (Task 6)
 // Консолен поддръжков проход: зарежда редовете на шестте tenant таблици
@@ -122,6 +170,49 @@ var app = builder.Build();
 // 4. КОНФИГУРАЦИЯ НА HTTP REQUEST PIPELINE
 // =========================================================
 
+// Точният CSP низ от плана (Global Constraints, ред 25) — ЕДИН ред, без преформатиране.
+const string ContentSecurityPolicy =
+    "default-src 'self'; img-src 'self' https:; style-src 'self' 'unsafe-inline'; " +
+    "script-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; " +
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
+
+// 4.1. ForwardedHeaders ПЪРВИ (Task 12): поправя RemoteIpAddress/Scheme преди всичко,
+// което чете request state (rate limiter-ът по-долу, HttpsRedirection, логирането).
+if (reverseProxyEnabled)
+{
+    app.UseForwardedHeaders();
+
+    // Production без изрично доверени proxy мрежи/IP-та → предупреждение (не crash):
+    // изчистените KnownNetworks/KnownProxies означават „всяко proxy е доверено", което е
+    // ОК само зад контролирания Azure front door.
+    if (app.Environment.IsProduction()
+        && !builder.Configuration.GetSection("ReverseProxy:KnownProxies").Exists()
+        && !builder.Configuration.GetSection("ReverseProxy:KnownNetworks").Exists())
+    {
+        app.Logger.LogWarning(
+            "ForwardedHeaders са включени (ReverseProxy:Enabled=true) без изрични " +
+            "ReverseProxy:KnownProxies/ReverseProxy:KnownNetworks — всички proxy-та са доверени.");
+    }
+}
+
+// 4.2. Security headers САМО в production (като HSTS) — рано в pipeline-а, за да ги
+// носят и error страниците, redirect-ите и статичните файлове. 'unsafe-inline' за
+// style/script е документиран компромис (views-те имат inline блокове).
+if (app.Environment.IsProduction())
+{
+    app.Use(async (context, next) =>
+    {
+        var response = context.Response;
+
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Content-Security-Policy"] = ContentSecurityPolicy;
+
+        await next();
+    });
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -139,6 +230,10 @@ app.UseRouting();
 // дори с валидна бисквитка — и ICurrentClinic би останал без clinic_id claim.
 app.UseAuthentication();
 
+// 4.3. Rate limiter (Task 12): СЛЕД ForwardedHeaders (виж 4.1) — partition-ът вижда
+// реалния клиентски IP, не proxy-то. Политика "login" е само на POST Account/Login.
+app.UseRateLimiter();
+
 app.UseAuthorization();
 
 // Ако ползваш .NET 9, тези редове са стандартни, но UseStaticFiles по-горе е по-важният
@@ -151,3 +246,7 @@ app.MapControllerRoute(
 // .WithStaticAssets(); // Можеш да го махнеш, ако дава грешка, но в .NET 9 е ОК.
 
 app.Run();
+
+// WebApplicationFactory<Program> (Task 12 тестове) изисква публичен тип за entry point-а
+// на minimal hosting. Top-level statements генерират internal Program — това го прави видим.
+public partial class Program { }

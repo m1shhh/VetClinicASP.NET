@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using VetClinic.Models.ViewModels;
 using VetClinic.Security;
 using VetClinic.Services;
@@ -54,6 +55,18 @@ namespace VetClinic.Controllers
             if (!IsPublicRegistrationEnabled())
             {
                 return NotFound();
+            }
+
+            // Guard (Task 12, разширение от Task 10 ревю): САМО анонимен може да регистрира.
+            // Аутентикиран POST би наследил стария clinic_id claim → clinic.registered с
+            // грешна ClinicId (и объркан tenant контекст). Избрано поведение: form + model
+            // error (не redirect) — не изисква UrlHelper и остава разбираемо за потребителя.
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Вече сте влезли в профил — регистрацията е достъпна само за анонимни посетители.");
+                return View(model);
             }
 
             if (!ModelState.IsValid)
@@ -151,6 +164,7 @@ namespace VetClinic.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("login")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)

@@ -265,6 +265,15 @@ jobs:
 > - PII тестът да сканира ВСИЧКИ нови редове (`Assert.All`), не само един login.failed ред; включи seeded DisplayName и реалната тестова парола.
 > - `patient.deleted` race: existence check и `DeletePatient` са отделни операции — `bool DeletePatient` би бил точен; логвай само при реален delete.
 > - Бъдещ tenant-facing audit read ЗАДЪЛЖИТЕЛНО филтрира по ClinicId (днес няма read API — AuditLogs не е tenant entity); иначе метаданни на други клиники изтичат.
+>
+> **Разширение (19.11, от Task 11 ревю — whole-branch notes):**
+> - Erasure тест: seed-ни поне един Identity join ред (UserRoles) и за контролната клиника Б + assert, че Б ги пази.
+> - Fault-injection тест за fail-closed одита: interceptor, който хвърля при AuditLogs insert → цялата ераза се връща.
+> - `AuditService` fail-open: стесни `catch (Exception)` до `DbUpdateException` и/или документирай договора „Log се вика само след бизнес SaveChanges“.
+> - Concurrent double-erasure: прихвани `DbUpdateConcurrencyException` и третирай като идемпотентен no-op (по избор).
+> - `IClinicDirectory` вместо нефилтриран `VetClinicContext` в ClinicAdminController (по избор, козметично).
+> - **[Authorize] ролева матрица (design §5)** за старите контролери (Owners/Patients/Veterinarians/Appointments/MedicalRecords): само ClinicAdmin трие пациенти; само ClinicAdmin/Vet пише мед. записи — днес липсва (pre-existing, tenant изолацията държи).
+> - Pre-existing: изтриване на unlinked vet с история → NO ACTION FK → `DbUpdateException` 500 (`VeterinarianService`) — guard или graceful error преди пилота.
 
 ---
 

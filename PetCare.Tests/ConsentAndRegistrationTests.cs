@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -87,6 +89,50 @@ namespace PetCare.Tests
             // ЕДИН нов Clinic ред — регистрацията не създава нищо друго.
             var clinicsAfter = await raw.Clinics.CountAsync();
             Assert.Equal(clinicsBefore + 1, clinicsAfter);
+
+            // Анонимният път пише clinic.registered с ClinicId NULL (регистрантът още
+            // няма clinic_id claim) и EntityId = новия ClinicId (Task 12, част 4).
+            var audit = Assert.Single(await raw.AuditLogs
+                .Where(a => a.Action == "clinic.registered" && a.EntityId == clinic.ClinicId)
+                .ToListAsync());
+            Assert.Null(audit.ClinicId);
+        }
+
+        [Fact]
+        public async Task Register_WhenAlreadyAuthenticated_IsRejected_PersistsNothing_NoAudit()
+        {
+            // Task 12, част 4 (разширение от Task 10 ревю): аутентикиран POST Register би
+            // наследил стария clinic_id claim и би записал clinic.registered с грешна ClinicId.
+            // Guard-ът връща redirect Home/Index и НЕ пипа базата.
+            await using var raw = _fixture.CreateContext(new TestClinicContext(null));
+            var clinicsBefore = await raw.Clinics.CountAsync();
+            var registeredAuditsBefore = await raw.AuditLogs.CountAsync(a => a.Action == "clinic.registered");
+
+            await using var harness = await IdentityTestHarness.BuildAsync(_fixture, publicRegistration: true);
+
+            harness.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "existing-user-id"),
+                new Claim("clinic_id", "1")
+            }, authenticationType: "Test"));
+
+            var controller = harness.Controller;
+            controller.ControllerContext = new ControllerContext { HttpContext = harness.HttpContext };
+
+            var model = ValidModel(consentAccepted: true);
+            var result = await controller.Register(model);
+
+            // Избрано поведение: form + model error (не redirect) — виж AccountController.
+            Assert.IsType<ViewResult>(result);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.Contains(
+                "анонимни",
+                Assert.Single(controller.ModelState[string.Empty]!.Errors).ErrorMessage);
+
+            // НИКАКЪВ нов Clinic/User ред и НИКАКЪВ нов одитен запис.
+            Assert.Equal(clinicsBefore, await raw.Clinics.CountAsync());
+            Assert.Equal(0, await raw.Users.CountAsync(u => u.Email == model.Email));
+            Assert.Equal(registeredAuditsBefore, await raw.AuditLogs.CountAsync(a => a.Action == "clinic.registered"));
         }
 
         [Fact]

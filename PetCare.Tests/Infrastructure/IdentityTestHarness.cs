@@ -53,6 +53,10 @@ namespace PetCare.Tests.Infrastructure
 
             var services = new ServiceCollection();
             services.AddLogging();
+            // MVC core услуги (ITempDataDictionaryFactory/IUrlHelperFactory и т.н.): тестът за
+            // Register guard-а слага автентикиран HttpContext на контролера, а View(model)
+            // после резолвва TempData през RequestServices. Без това Controller.View хвърля.
+            services.AddControllersWithViews();
             services.AddSingleton<IHttpContextAccessor>(accessor);
 
             // Контекстът на теста е без клиничен контекст (анонимен посетител на Register/Login)
@@ -116,13 +120,14 @@ namespace PetCare.Tests.Infrastructure
                 configuration,
                 provider.GetRequiredService<IAuditService>());
 
-            return new Harness(controller, provider, configuration);
+            return new Harness(controller, provider, configuration, httpContext);
         }
 
         public sealed record Harness(
             AccountController Controller,
             ServiceProvider Provider,
-            IConfiguration Configuration) : IAsyncDisposable
+            IConfiguration Configuration,
+            HttpContext HttpContext) : IAsyncDisposable
         {
             /// <summary>Свеж контролер върху СЪЩИЯ provider (за многократни POST Login опити
             /// — ModelState-ът се трупа между извикванията на един контролер).</summary>
